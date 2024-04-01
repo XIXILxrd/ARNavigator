@@ -1,3 +1,17 @@
 <resources>
-    <string name="app_name">ARNavigation</string>
+    <string name="app_name">Интерактивная карта ЮУрГУ</string>
+    <string name="home_content_description_text">Home</string>
+    <string name="search_content_description_text">Search</string>
+    <string name="route_content_description_text">Route</string>
+    <string name="profile_content_description_text">Profile</string>
+    <string name="search_placeholder_text">Search</string>
+    <string name="find_location_content_desctiption_text">Find Location</string>
+    <string name="back_button_text">Back button</string>
+    <string name="admin_mode_text">Admin mode</string>
+    <string name="from_text">from</string>
+    <string name="to_text">to</string>
+    <string name="audiences_text">Audiences</string>
+    <string name="recent_text">Recent</string>
+    <string name="hours_text">hr</string>
+    <string name="minunes_text">min</string>
 </resources>

@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kapt)
-    alias(libs.plugins.dagger.hilt)
 }
 
 android {
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -53,6 +53,19 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.navigation.compose)
+
+    implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.accompanist.permissions)
+
+    implementation(libs.camera.core)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.camera.extensions)
+
+    implementation(libs.mlkit.text.recognition.latin)
+
     implementation(libs.arcore)
 
     implementation(libs.dagger.hilt)
