@@ -18,6 +18,7 @@ dagger = "2.51"
 arcore = "1.42.0"
 mlkit = "16.0.0"
 camerax = "1.3.2"
+kotlin-math = "1.5.3"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -62,6 +63,8 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "camerax" }
 #camera-video = { module = "androidx.camera:camera-video", version.ref = "camerax" }
+
+kotlin-math = { module = "dev.romainguy:kotlin-math", version.ref = "kotlin-math"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
