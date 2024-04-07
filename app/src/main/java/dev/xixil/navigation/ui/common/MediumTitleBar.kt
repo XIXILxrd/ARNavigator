@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.xixil.navigation.R
-import dev.xixil.navigation.ui.DefaultPreview
+import dev.xixil.navigation.ui.annotations.DefaultPreview
 
 @Composable
 fun MediumTitleBar(

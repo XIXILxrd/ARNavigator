@@ -2,6 +2,6 @@ package dev.xixil.navigation.domain.usecases
 
 import dev.xixil.navigation.domain.GraphRepository
 
-class GetVertexUseCase<T>(private val graphRepository: GraphRepository<T>) {
-    operator fun invoke(vertexId: Int) = graphRepository.getVertex(vertexId)
+class GetVertexUseCase(private val graphRepository: GraphRepository) {
+    operator fun invoke(vertexId: Long) = graphRepository.getVertex(vertexId)
 }

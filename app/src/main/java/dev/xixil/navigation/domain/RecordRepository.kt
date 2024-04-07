@@ -11,5 +11,5 @@ interface RecordRepository {
 
     fun getRecords(): Flow<List<Record>>
 
-    suspend fun clearRecords(records: List<Record>)
+    suspend fun clearRecords()
 }

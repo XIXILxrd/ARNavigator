@@ -1,9 +1,8 @@
 package dev.xixil.navigation.domain.usecases
 
 import dev.xixil.navigation.domain.GraphRepository
-import dev.xixil.navigation.domain.models.Vertex
+import dev.xixil.navigation.domain.models.Edge
 
-class AddUndirectedEdgeUseCase<T>(private val graphRepository: GraphRepository<T>) {
-    suspend operator fun invoke(source: Vertex<T>, destination: Vertex<T>, weight: Long) =
-        graphRepository.addUndirectedEdge(source, destination, weight)
+class AddUndirectedEdgeUseCase(private val graphRepository: GraphRepository) {
+    suspend operator fun invoke(edge: Edge) = graphRepository.addUndirectedEdge(edge)
 }

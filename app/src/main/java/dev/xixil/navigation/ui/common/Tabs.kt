@@ -33,7 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.xixil.navigation.R
-import dev.xixil.navigation.ui.DefaultPreview
+import dev.xixil.navigation.ui.annotations.DefaultPreview
 
 sealed class TabItem(var titleResId: Int, var screen: @Composable () -> Unit) {
     data object Audiences : TabItem(

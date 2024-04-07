@@ -4,16 +4,20 @@ import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 import kotlinx.coroutines.flow.Flow
 
-interface GraphRepository<T> {
-    suspend fun createVertex(vertex: Vertex<T>)
+interface GraphRepository {
+    suspend fun createVertex(vertex: Vertex): Vertex
 
-    suspend fun addUndirectedEdge(source: Vertex<T>, destination: Vertex<T>, weight: Long)
+    suspend fun addUndirectedEdge(edge: Edge)
 
-    fun getEdges(source: Vertex<T>): Flow<List<Edge<T>>>
+    fun getEdges(source: Vertex): Flow<List<Edge>>
 
-    fun getVertex(vertexId: Int): Flow<Vertex<T>>
+    fun getVertex(vertexId: Long): Flow<Vertex>
 
-    suspend fun removeEdges(source: Vertex<T>)
+    fun getGraph(): Flow<Map<Vertex, List<Edge>>>
 
-    suspend fun removeVertex(vertex: Vertex<T>)
+    suspend fun removeEdges(source: Vertex)
+
+    suspend fun removeVertex(vertex: Vertex)
+
+    suspend fun clear()
 }

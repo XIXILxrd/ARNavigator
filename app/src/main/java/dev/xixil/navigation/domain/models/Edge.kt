@@ -1,10 +1,13 @@
 package dev.xixil.navigation.domain.models
 
 
-//ребро
-data class Edge<T>(
+data class Edge(
     val id: Long,
-    val source: Vertex<T>,
-    val destination: Vertex<T>,
+    val source: Vertex,
+    val destination: Vertex,
     val weight: Long,
-)
+) {
+    override fun toString(): String {
+        return "$destination"
+    }
+}
