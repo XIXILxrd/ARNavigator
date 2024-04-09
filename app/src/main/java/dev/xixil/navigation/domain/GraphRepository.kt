@@ -11,7 +11,7 @@ interface GraphRepository {
 
     fun getEdges(source: Vertex): Flow<List<Edge>>
 
-    fun getVertex(vertexId: Long): Flow<Vertex>
+    suspend fun getVertex(vertexId: Long): Vertex
 
     fun getGraph(): Flow<Map<Vertex, List<Edge>>>
 

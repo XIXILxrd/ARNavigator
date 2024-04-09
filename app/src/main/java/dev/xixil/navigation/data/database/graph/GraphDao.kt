@@ -24,7 +24,7 @@ interface GraphDao {
     fun getAllEdges(): Flow<List<EdgeDbo>>
 
     @Query("SELECT * FROM vertices WHERE vertexId=:vertexId")
-    fun getVertex(vertexId: Long): Flow<VertexDbo>
+    suspend fun getVertex(vertexId: Long): VertexDbo
 
     @Query("SELECT * FROM vertices")
     fun getVertices(): Flow<List<VertexDbo>>

@@ -18,6 +18,9 @@ interface RecordDao {
     @Query("SELECT * FROM records LIMIT 15")
     fun getRecords(): Flow<List<RecordDbo>>
 
+    @Query("DELETE FROM records WHERE id=:recordId")
+    suspend fun deleteRecord(recordId: Long)
+
     @Query("DELETE FROM records")
     suspend fun clearRecords()
 }

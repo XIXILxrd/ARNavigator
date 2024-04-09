@@ -50,9 +50,9 @@ class GraphRepositoryImplementation @Inject constructor(
         }
     }
 
-    override fun getVertex(vertexId: Long): Flow<Vertex> {
-        return graphDatabase.graph.getVertex(vertexId).map {
-            it.toVertex()
+    override suspend fun getVertex(vertexId: Long): Vertex {
+        return withContext(Dispatchers.IO) {
+            graphDatabase.graph.getVertex(vertexId).toVertex()
         }
     }
 

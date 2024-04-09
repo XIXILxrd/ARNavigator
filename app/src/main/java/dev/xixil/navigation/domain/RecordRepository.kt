@@ -7,9 +7,11 @@ interface RecordRepository {
 
     suspend fun addRecord(record: Record)
 
-    fun getRecord(recordId: Long): Record
+    suspend fun getRecord(recordId: Long): Record
 
     fun getRecords(): Flow<List<Record>>
+
+    suspend fun deleteRecord(recordId: Long)
 
     suspend fun clearRecords()
 }
