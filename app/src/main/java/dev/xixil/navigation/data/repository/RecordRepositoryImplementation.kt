@@ -1,4 +1,4 @@
-package dev.xixil.navigation.data
+package dev.xixil.navigation.data.repository
 
 import dev.xixil.navigation.data.database.record.RecordsDatabase
 import dev.xixil.navigation.data.utils.toRecord

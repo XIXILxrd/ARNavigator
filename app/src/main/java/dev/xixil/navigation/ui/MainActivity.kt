@@ -1,5 +1,6 @@
 package dev.xixil.navigation.ui
 
+import MainScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,11 +20,10 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface
                 ) {
+                    MainScreen()
                 }
             }
         }
     }
-
-
 }
 
