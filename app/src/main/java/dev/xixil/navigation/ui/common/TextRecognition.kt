@@ -11,17 +11,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,65 +41,53 @@ import androidx.lifecycle.LifecycleOwner
 import dev.xixil.navigation.data.TextRecognitionAnalyzer
 
 @Composable
-fun CameraContent() {
-
+fun CameraContent(
+    modifier: Modifier = Modifier,
+) {
     val context: Context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val cameraController: LifecycleCameraController =
         remember { LifecycleCameraController(context) }
-    var detectedText: String by remember { mutableStateOf("No text detected yet..") }
 
-    fun onTextUpdated(updatedText: String) {
-        detectedText = updatedText
-    }
+    var detectedText: String by remember { mutableStateOf("") }
+    val onTextUpdated: (String) -> Unit = { detectedText = it }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-    ) { paddingValues: PaddingValues ->
-
-        Box(
+    Box(
+        modifier = modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        AndroidView(
             modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            AndroidView(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .padding(paddingValues),
-                factory = { context ->
-                    PreviewView(context).apply {
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        setBackgroundColor(Color.Black.toArgb())
-                        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                        scaleType = PreviewView.ScaleType.FILL_START
-                    }.also { previewView ->
-                        startTextRecognition(
-                            context = context,
-                            cameraController = cameraController,
-                            lifecycleOwner = lifecycleOwner,
-                            previewView = previewView,
-                            onDetectedTextUpdated = ::onTextUpdated
-                        )
-                    }
+                .wrapContentSize()
+                .padding(),
+            factory = { context ->
+                PreviewView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setBackgroundColor(Color.Black.toArgb())
+                    implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                    scaleType = PreviewView.ScaleType.FIT_CENTER
+                }.also { previewView ->
+                    startTextRecognition(
+                        context = context,
+                        cameraController = cameraController,
+                        lifecycleOwner = lifecycleOwner,
+                        previewView = previewView,
+                        onDetectedTextUpdated = onTextUpdated
+                    )
                 }
-            )
+            }
+        )
 
-            RectangleView()
-
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp),
-                text = detectedText,
-            )
-        }
+        AnalysisArea(text = detectedText)
     }
+
 }
 
+/*TODO(replace function in the view model)*/
 private fun startTextRecognition(
     context: Context,
     cameraController: LifecycleCameraController,
@@ -135,6 +121,8 @@ fun NoPermissionContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
         ) {
+            /*
+            * TODO()*/
             Text(
                 textAlign = TextAlign.Center,
                 text = "Please grant the permission to use the camera to use the core functionality of this app."
@@ -148,12 +136,30 @@ fun NoPermissionContent(
 }
 
 @Composable
-fun RectangleView(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
+fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 330.dp, horizontal = 20.dp)
-            .background(color = Color.White.copy(alpha = 0.2f), RoundedCornerShape(25))
-            .zIndex(1f)
-    )
+            .padding(start = 20.dp, end = 20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = modifier
+                .size(
+                    height = 190.dp,
+                    width = 400.dp
+                )
+                .background(color = Color.White.copy(alpha = 0.2f), RoundedCornerShape(25.dp))
+                .zIndex(1f)
+        ) {
+            Text(
+                text = text, modifier = Modifier.align(
+                    Alignment.BottomCenter
+                ),
+                color = Color.White,
+                maxLines = 1
+            )
+        }
+    }
 }

@@ -26,6 +26,7 @@ class TextRecognitionAnalyzer(
     private var imageCropPercentages: Pair<Int, Int> =
         Pair(DESIRED_HEIGHT_CROP_PERCENT, DESIRED_WIDTH_CROP_PERCENT)
 
+
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
         coroutineScope.launch {

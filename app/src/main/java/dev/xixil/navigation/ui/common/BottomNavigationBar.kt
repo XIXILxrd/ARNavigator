@@ -1,6 +1,7 @@
 package dev.xixil.navigation.ui.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
@@ -13,14 +14,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import dev.xixil.navigation.R
+import dev.xixil.navigation.ui.annotations.DefaultPreview
 
 /*TODO
 *  implement navigation and correct visualization of selected item*/
 
+@DefaultPreview
+@Composable
+private fun Prev() {
+    BottomNavigationBar()
+}
+
 @Composable
 fun BottomNavigationBar(modifier: Modifier = Modifier) {
-    NavigationBar(modifier = modifier
-        .fillMaxWidth()) {
+    NavigationBar(
+        modifier = modifier
+            .wrapContentHeight()
+            .fillMaxWidth()
+    ) {
         NavigationBarItem(
             selected = true,
             onClick = { /*TODO*/ },
