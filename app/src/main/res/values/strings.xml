@@ -14,4 +14,12 @@
     <string name="recent_text">Recent</string>
     <string name="hours_text">hr</string>
     <string name="minunes_text">min</string>
+    <string name="profile_text">Profile</string>
+    <string name="remove_button_text">Remove</string>
+    <string name="link_button_text">Link</string>
+    <string name="add_button_text">Add</string>
+    <string name="directions_text">Directions</string>
+    <string name="from_here_placeholder_text">From here</string>
+    <string name="to_placeholder_text">To</string>
+    <string name="history_title_text">History</string>
 </resources>

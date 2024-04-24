@@ -13,7 +13,7 @@ abstract class GraphRoomDatabase : RoomDatabase() {
     abstract fun graphDao(): GraphDao
 }
 
-class GraphDatabase @Inject constructor(private val database: GraphRoomDatabase) {
+class GraphDatabase(private val database: GraphRoomDatabase) {
     val graph: GraphDao
         get() = database.graphDao()
 }

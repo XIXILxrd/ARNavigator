@@ -3,6 +3,7 @@ package dev.xixil.navigation.ui.common
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -18,17 +19,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.xixil.navigation.R
-
-
-@Preview
-@Composable
-fun LargeTextFieldsPreview() {
-    LargeTextField(
-        placeholder = stringResource(id = R.string.to_text)
-    ) {
-        ""
-    }
-}
 
 @Preview
 @Composable
@@ -48,6 +38,7 @@ fun LargeTextField(
 
     Surface(
         modifier = modifier
+            .wrapContentHeight()
             .fillMaxWidth(),
         color = Color.White,
         border = BorderStroke(2.dp, Color(0xFFEFF1F5)),
@@ -58,7 +49,7 @@ fun LargeTextField(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+            modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
             maxLines = 1
         )
     }

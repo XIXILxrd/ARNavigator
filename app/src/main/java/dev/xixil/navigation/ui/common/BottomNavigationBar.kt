@@ -44,7 +44,7 @@ fun BottomNavigationBar(modifier: Modifier = Modifier) {
         )
 
         NavigationBarItem(
-            selected = true,
+            selected = false,
             onClick = { /*TODO*/ },
             icon = {
                 Icon(
@@ -55,7 +55,7 @@ fun BottomNavigationBar(modifier: Modifier = Modifier) {
         )
 
         NavigationBarItem(
-            selected = true,
+            selected = false,
             onClick = { /*TODO*/ },
             icon = {
                 Icon(

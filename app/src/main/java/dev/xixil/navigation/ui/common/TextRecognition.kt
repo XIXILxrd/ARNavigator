@@ -69,7 +69,7 @@ fun CameraContent(
                     )
                     setBackgroundColor(Color.Black.toArgb())
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                    scaleType = PreviewView.ScaleType.FIT_CENTER
+                    scaleType = PreviewView.ScaleType.FILL_CENTER
                 }.also { previewView ->
                     startTextRecognition(
                         context = context,
@@ -140,7 +140,7 @@ fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 20.dp, end = 20.dp),
+            .padding(start = 10.dp, end = 10.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -158,7 +158,7 @@ fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
                     Alignment.BottomCenter
                 ),
                 color = Color.White,
-                maxLines = 1
+                maxLines = 3
             )
         }
     }

@@ -3,6 +3,7 @@ package dev.xixil.navigation.ui.common
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
@@ -36,7 +37,7 @@ fun PrimaryButton(
             .fillMaxWidth()
             .wrapContentHeight(),
         colors = colors,
-        shape = RoundedCornerShape(12),
+        shape = RoundedCornerShape(12.dp),
         onClick = onClick
     ) {
         Text(text = stringResource(id = text), color = colors.contentColor)
@@ -66,7 +67,7 @@ fun NavigateFloatingActionButton(
 @Composable
 fun SmallPrimitiveButton(
     modifier: Modifier = Modifier,
-    @StringRes text: Int,
+    text: String,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     onClick: () -> Unit,
 ) {
@@ -75,10 +76,10 @@ fun SmallPrimitiveButton(
             .width(110.dp)
             .wrapContentHeight(),
         colors = colors,
-        shape = RoundedCornerShape(12),
+        shape = RoundedCornerShape(12.dp),
         onClick = onClick
     ) {
-        Text(text = stringResource(id = text))
+        Text(modifier = Modifier.padding(vertical = 14.dp), text = text)
     }
 }
 
@@ -86,7 +87,7 @@ fun SmallPrimitiveButton(
 @Composable
 private fun ButtonPreview() {
     Column {
-        SmallPrimitiveButton(text = R.string.home_content_description_text) {
+        SmallPrimitiveButton(text = stringResource(R.string.home_content_description_text)) {
 
         }
 

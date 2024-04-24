@@ -24,7 +24,7 @@ import dev.xixil.navigation.R
 @Composable
 fun SwitcherWithText(
     modifier: Modifier = Modifier,
-    @StringRes text: Int,
+    text: String,
 ) {
     var isChecked by rememberSaveable { mutableStateOf(false) }
 
@@ -35,7 +35,7 @@ fun SwitcherWithText(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(text),
+            text = text,
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -49,5 +49,5 @@ fun SwitcherWithText(
 @Preview
 @Composable
 private fun Switcher() {
-    SwitcherWithText(text = R.string.admin_mode_text)
+    SwitcherWithText(text = stringResource(R.string.admin_mode_text))
 }

@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
-class GraphRepositoryImplementation @Inject constructor(
+class GraphRepositoryImplementation(
     private val graphDatabase: GraphDatabase,
 ) : GraphRepository {
     override suspend fun createVertex(vertex: Vertex): Vertex {

@@ -84,7 +84,7 @@ fun AudienceItem(
             .fillMaxWidth()
             .wrapContentHeight()
             .background(MaterialTheme.colorScheme.onPrimary)
-            .padding(vertical = 16.dp, horizontal = 12.dp),
+            .padding(top = 16.dp, bottom = 16.dp, end = 12.dp, start = 52.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
@@ -148,12 +148,12 @@ fun AudienceHistoryItem(
 @Composable
 fun AudienceList(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
     list: List<String>,
+    content: @Composable () -> Unit,
 ) {
     LazyColumn {
         items(list) {audience ->
-            /*TODO*/
+            content()
         }
     }
 }

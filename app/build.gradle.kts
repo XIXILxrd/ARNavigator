@@ -53,6 +53,10 @@ android {
 }
 
 dependencies {
+    implementation(libs.ar.sceneview)
+
+    implementation(libs.compose.viewmodel)
+
     implementation(libs.kotlin.math)
 
     implementation(libs.androidx.navigation.compose)
