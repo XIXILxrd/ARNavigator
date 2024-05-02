@@ -24,8 +24,8 @@ import com.google.android.filament.Engine
 import com.google.ar.core.Anchor
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
-import com.google.ar.core.Plane
 import com.google.ar.core.TrackingFailureReason
+import dev.romainguy.kotlin.math.Float3
 import dev.xixil.navigation.R
 import dev.xixil.navigation.ui.annotations.DefaultPreview
 import dev.xixil.navigation.ui.common.SmallPrimitiveButton
@@ -33,12 +33,17 @@ import dev.xixil.navigation.ui.common.SmallTextField
 import dev.xixil.navigation.ui.theme.ARNavigationTheme
 import io.github.sceneview.ar.ARScene
 import io.github.sceneview.ar.arcore.createAnchorOrNull
-import io.github.sceneview.ar.arcore.getUpdatedPlanes
 import io.github.sceneview.ar.arcore.isValid
 import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.ar.rememberARCameraNode
+import io.github.sceneview.collision.Quaternion
+import io.github.sceneview.collision.Vector3
 import io.github.sceneview.loaders.MaterialLoader
 import io.github.sceneview.loaders.ModelLoader
+import io.github.sceneview.math.toFloat3
+import io.github.sceneview.math.toNewQuaternion
+import io.github.sceneview.math.toRotation
+import io.github.sceneview.math.toVector3
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.node.CubeNode
 import io.github.sceneview.node.ModelNode
@@ -50,6 +55,7 @@ import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNodes
 import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
+
 
 @Composable
 fun AdminModeScreen() {
@@ -63,8 +69,7 @@ fun AdminModeScreen() {
 private fun AdminModeContent() {
     val scaffoldState = rememberBottomSheetScaffoldState()
 
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
+    BottomSheetScaffold(scaffoldState = scaffoldState,
         sheetContainerColor = Color.White,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
@@ -133,6 +138,8 @@ private fun ARAdminContent(modifier: Modifier = Modifier) {
     }
     var frame by remember { mutableStateOf<Frame?>(null) }
 
+    var clickedNode by remember { mutableStateOf<Node?>(null) }
+
     ARScene(
         modifier = modifier.fillMaxSize(),
         childNodes = childNodes,
@@ -146,7 +153,7 @@ private fun ARAdminContent(modifier: Modifier = Modifier) {
                 else -> Config.DepthMode.DISABLED
             }
             config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-            config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
+            config.lightEstimationMode = Config.LightEstimationMode.DISABLED
         },
         cameraNode = cameraNode,
         planeRenderer = planeRenderer,
@@ -156,70 +163,110 @@ private fun ARAdminContent(modifier: Modifier = Modifier) {
         onSessionUpdated = { _, updatedFrame ->
             frame = updatedFrame
 
-            if (childNodes.isEmpty()) {
-                updatedFrame.getUpdatedPlanes()
-                    .firstOrNull { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }
-                    ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
-                        childNodes += createAnchorNode(
-                            engine = engine,
-                            modelLoader = modelLoader,
-                            materialLoader = materialLoader,
-                            modelInstances = modelInstances,
-                            anchor = anchor
-                        )
-                    }
-            }
         },
-        onGestureListener = rememberOnGestureListener(
-            onSingleTapConfirmed = { motionEvent, node ->
-                if (node == null) {
-                    val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                    hitResults?.firstOrNull {
-                        it.isValid(
-                            depthPoint = false,
-                            point = false,
-                        )
-                    }?.createAnchorOrNull()
-                        ?.let { anchor ->
-                            planeRenderer = false
-                            childNodes += createAnchorNode(
-                                engine = engine,
-                                modelLoader = modelLoader,
-                                materialLoader = materialLoader,
-                                modelInstances = modelInstances,
-                                anchor = anchor
-                            )
-                        }
+        onGestureListener = rememberOnGestureListener(onSingleTapConfirmed = { motionEvent, node ->
+            if (node == null) {
+                val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                hitResults?.firstOrNull {
+                    it.isValid(
+                        depthPoint = true,
+                        point = false,
+                    )
+                }?.createAnchorOrNull()?.let { anchor ->
+                    planeRenderer = false
+                    childNodes += createVertexAnchor(
+                        engine = engine,
+                        modelLoader = modelLoader,
+                        materialLoader = materialLoader,
+                        modelInstances = modelInstances,
+                        anchor = anchor
+                    )
                 }
-            },
-            onLongPress = { _, node ->
-                removeAnchorNode(node)
             }
-        )
+        }, onLongPress = { _, node ->
+            removeNode(node)
+        }, onDoubleTap = { motionEvent, node ->
+            if (node == null) {
+                return@rememberOnGestureListener
+            }
+
+            if (clickedNode == null) {
+                clickedNode = node
+            }
+
+            if (clickedNode != node) {
+                val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                hitResults?.firstOrNull {
+                    it.isValid(
+                        depthPoint = true,
+                        point = false,
+                    )
+                }?.createAnchorOrNull()?.let { anchor ->
+                    planeRenderer = false
+                    childNodes += createEdgeAnchor(
+                        destinationVertex = node,
+                        sourceVertex = clickedNode!!,
+                        engine = engine,
+                        anchor = anchor
+                    )
+                }
+                clickedNode = null
+            }
+        })
     )
 }
 
-private fun removeAnchorNode(node: Node?) {
+private fun createEdgeAnchor(
+    destinationVertex: Node,
+    sourceVertex: Node,
+    engine: Engine,
+    anchor: Anchor,
+): Node {
+    val pointA = sourceVertex.worldPosition.toVector3()
+    val pointB = destinationVertex.worldPosition.toVector3()
+
+    val difference = Vector3.subtract(pointA, pointB)
+    val directionFromTopToBottom = difference.normalized()
+    val rotationFromAToB = Quaternion.lookRotation(directionFromTopToBottom, Vector3.up())
+
+    val anchorNode = AnchorNode(engine = engine, anchor = anchor)
+    val edgeNode = CubeNode(
+        engine = engine,
+        size = Float3(0.01f, 0.01f, difference.length()),
+        center = Vector3.zero().toFloat3()
+    ).apply {
+        parent = anchorNode
+        worldPosition = Vector3.add(pointA, pointB).scaled(0.5f).toFloat3()
+        worldRotation = rotationFromAToB.toNewQuaternion().toRotation()
+    }
+
+    return edgeNode
+}
+
+private fun removeNode(node: Node?) {
     node?.destroy()
 }
 
-private fun createAnchorNode(
+private fun createVertexAnchor(
     engine: Engine,
     modelLoader: ModelLoader,
     materialLoader: MaterialLoader,
     modelInstances: MutableList<ModelInstance>,
     anchor: Anchor,
-): AnchorNode {
+): Node {
     val anchorNode = AnchorNode(engine = engine, anchor = anchor)
     val modelNode = ModelNode(
         modelInstance = modelInstances.apply {
             if (isEmpty()) {
                 this += modelLoader.createInstancedModel("models/cylinder.glb", 1)
             }
-        }.removeLast(),
-        scaleToUnits = 0.1f
+        }.removeLast(), scaleToUnits = 0.1f
     ).apply {
         isEditable = true
+        isPositionEditable = false
+        isRotationEditable = false
+        isShadowCaster = false
+        isShadowReceiver = false
     }
 
     val boundingBoxNode = CubeNode(
@@ -240,7 +287,7 @@ private fun createAnchorNode(
         }
     }
 
-    return anchorNode
+    return modelNode
 }
 
 @DefaultPreview
