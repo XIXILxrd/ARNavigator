@@ -1,5 +1,6 @@
 package dev.xixil.navigation.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,102 +13,79 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.android.filament.Engine
-import com.google.ar.core.Anchor
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
+import com.google.ar.core.Plane
 import com.google.ar.core.TrackingFailureReason
-import dev.romainguy.kotlin.math.Float3
 import dev.xixil.navigation.R
+import dev.xixil.navigation.domain.models.Edge
+import dev.xixil.navigation.domain.models.Vertex
+import dev.xixil.navigation.ui.AdminModeViewModel
+import dev.xixil.navigation.ui.DrawerHelper
 import dev.xixil.navigation.ui.annotations.DefaultPreview
-import dev.xixil.navigation.ui.common.SmallPrimitiveButton
 import dev.xixil.navigation.ui.common.SmallTextField
 import dev.xixil.navigation.ui.theme.ARNavigationTheme
 import io.github.sceneview.ar.ARScene
 import io.github.sceneview.ar.arcore.createAnchorOrNull
+import io.github.sceneview.ar.arcore.getUpdatedPlanes
 import io.github.sceneview.ar.arcore.isValid
-import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.ar.rememberARCameraNode
-import io.github.sceneview.collision.Quaternion
 import io.github.sceneview.collision.Vector3
-import io.github.sceneview.loaders.MaterialLoader
-import io.github.sceneview.loaders.ModelLoader
-import io.github.sceneview.math.toFloat3
-import io.github.sceneview.math.toNewQuaternion
-import io.github.sceneview.math.toRotation
 import io.github.sceneview.math.toVector3
 import io.github.sceneview.model.ModelInstance
-import io.github.sceneview.node.CubeNode
-import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import io.github.sceneview.rememberCollisionSystem
 import io.github.sceneview.rememberEngine
-import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelLoader
-import io.github.sceneview.rememberNodes
 import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 @Composable
-fun AdminModeScreen() {
+fun AdminModeScreen(viewModel: AdminModeViewModel = hiltViewModel()) {
     ARNavigationTheme {
-        AdminModeContent()
+        AdminModeContent(
+            onCreateVertex = { viewModel.createVertex(it) },
+            onRemoveVertex = { viewModel.removeVertex(it) },
+            onCreateEdge = { viewModel.createEdge(it) },
+            onRemoveEdge = { viewModel.removeEdge(it) },
+            onLoadGraph = { viewModel.getGraph() }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AdminModeContent() {
+private fun AdminModeContent(
+    onCreateVertex: (Vertex) -> Unit,
+    onCreateEdge: (Edge) -> Unit,
+    onRemoveVertex: (Vertex) -> Unit,
+    onRemoveEdge: (Vertex) -> Unit,
+    onLoadGraph: () -> Flow<Map<Vertex, List<Edge>>>,
+) {
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     BottomSheetScaffold(scaffoldState = scaffoldState,
         sheetContainerColor = Color.White,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                SmallTextField(
-                    modifier = Modifier.weight(0.5f),
-                    placeholder = stringResource(id = R.string.to_text)
-                ) {
-                    ""
-                }
-                SmallTextField(
-                    modifier = Modifier.weight(0.5f),
-                    placeholder = stringResource(id = R.string.from_text)
-                ) {
-                    ""
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                SmallPrimitiveButton(text = stringResource(R.string.remove_button_text)) {
-
-                }
-                SmallPrimitiveButton(text = stringResource(R.string.link_button_text)) {
-
-                }
-                SmallPrimitiveButton(text = stringResource(R.string.add_button_text)) {
-
-                }
-            }
+            BottomSheetContent()
         }) { innerPadding ->
         Box(
             Modifier
@@ -115,20 +93,57 @@ private fun AdminModeContent() {
                 .padding(innerPadding)
                 .background(Color.Cyan)
         ) {
-            ARAdminContent()
+            ARAdminContent(
+                onCreateVertex = onCreateVertex,
+                onCreateEdge = onCreateEdge,
+                onRemoveEdge = onRemoveEdge,
+                onRemoveVertex = onRemoveVertex,
+                onLoadGraph = onLoadGraph
+            )
         }
     }
 }
 
 @Composable
-private fun ARAdminContent(modifier: Modifier = Modifier) {
+fun BottomSheetContent(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SmallTextField(
+            modifier = Modifier.weight(0.5f),
+            placeholder = stringResource(id = R.string.to_text)
+        ) {
+            ""
+        }
+        SmallTextField(
+            modifier = Modifier.weight(0.5f),
+            placeholder = stringResource(id = R.string.from_text)
+        ) {
+            ""
+        }
+    }
+}
+
+@Composable
+private fun ARAdminContent(
+    onCreateVertex: (Vertex) -> Unit,
+    onCreateEdge: (Edge) -> Unit,
+    onRemoveVertex: (Vertex) -> Unit,
+    onRemoveEdge: (Vertex) -> Unit,
+    onLoadGraph: () -> Flow<Map<Vertex, List<Edge>>>,
+    modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
+) {
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    val materialLoader = rememberMaterialLoader(engine)
     val cameraNode = rememberARCameraNode(engine)
-    val childNodes = rememberNodes()
+    val childNodes = rememberNodesMap()
     val view = rememberView(engine)
     val collisionSystem = rememberCollisionSystem(view)
+
+    val context = LocalContext.current
 
     var planeRenderer by remember { mutableStateOf(true) }
 
@@ -142,7 +157,7 @@ private fun ARAdminContent(modifier: Modifier = Modifier) {
 
     ARScene(
         modifier = modifier.fillMaxSize(),
-        childNodes = childNodes,
+        childNodes = childNodes.keys.toList(),
         engine = engine,
         view = view,
         modelLoader = modelLoader,
@@ -162,138 +177,144 @@ private fun ARAdminContent(modifier: Modifier = Modifier) {
         },
         onSessionUpdated = { _, updatedFrame ->
             frame = updatedFrame
-
         },
-        onGestureListener = rememberOnGestureListener(onSingleTapConfirmed = { motionEvent, node ->
-            if (node == null) {
-                val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                hitResults?.firstOrNull {
-                    it.isValid(
-                        depthPoint = true,
-                        point = false,
-                    )
-                }?.createAnchorOrNull()?.let { anchor ->
-                    planeRenderer = false
-                    childNodes += createVertexAnchor(
-                        engine = engine,
-                        modelLoader = modelLoader,
-                        materialLoader = materialLoader,
-                        modelInstances = modelInstances,
-                        anchor = anchor
-                    )
+        onSessionCreated = { _ ->
+            frame?.getUpdatedPlanes()
+                ?.firstOrNull { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }
+                ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
+                    CoroutineScope(Dispatchers.Main).launch {
+                        onLoadGraph.invoke().collect { graph ->
+                            graph.values.map { edges ->
+                                edges.map { edge ->
+                                    drawerHelper.drawNodesFromDatabase(
+                                        drawerHelper,
+                                        engine,
+                                        modelLoader,
+                                        modelInstances,
+                                        anchor,
+                                        edge,
+                                        childNodes
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        }, onLongPress = { _, node ->
-            removeNode(node)
-        }, onDoubleTap = { motionEvent, node ->
-            if (node == null) {
-                return@rememberOnGestureListener
-            }
+        },
+        onGestureListener = rememberOnGestureListener(
+            onSingleTapConfirmed = { motionEvent, node ->
+                if (node == null) {
+                    val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                    hitResults?.firstOrNull {
+                        it.isValid(
+                            depthPoint = true,
+                            point = false,
+                        )
+                    }?.createAnchorOrNull()?.let { anchor ->
+                        planeRenderer = false
 
-            if (clickedNode == null) {
-                clickedNode = node
-            }
+                        val vertexNode = drawerHelper.drawVertex(
+                            engine = engine,
+                            modelLoader = modelLoader,
+                            modelInstances = modelInstances,
+                            anchor = anchor
+                        )
 
-            if (clickedNode != node) {
-                val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                hitResults?.firstOrNull {
-                    it.isValid(
-                        depthPoint = true,
-                        point = false,
-                    )
-                }?.createAnchorOrNull()?.let { anchor ->
-                    planeRenderer = false
-                    childNodes += createEdgeAnchor(
-                        destinationVertex = node,
-                        sourceVertex = clickedNode!!,
-                        engine = engine,
-                        anchor = anchor
-                    )
+                        childNodes[vertexNode] = Vertex(
+                            id = Random.nextLong(),
+                            data = null,
+                            coordinates = vertexNode.worldPosition
+                        ).also(onCreateVertex)
+                    }
                 }
-                clickedNode = null
-            }
-        })
+            },
+            onLongPress = { _, node ->
+                if (node == null) {
+                    return@rememberOnGestureListener
+                }
+
+                val element = childNodes[node] ?: childNodes[node.parent]
+
+                when(element) {
+                    is Edge -> {
+                        onRemoveEdge(element.source)
+                        node.destroy()
+                        Toast.makeText(context, "Edge has been removed", Toast.LENGTH_SHORT).show()
+                    }
+                    is Vertex -> {
+                        onRemoveVertex(element)
+                        node.destroy()
+                        Toast.makeText(context, "Vertex has been removed", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        Toast.makeText(context, "Node is null", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+            },
+            onDoubleTap = { motionEvent, node ->
+                if (node == null) {
+                    return@rememberOnGestureListener
+                }
+
+                if (clickedNode == null) {
+                    clickedNode = node
+                    return@rememberOnGestureListener
+                }
+
+                if (clickedNode != node) {
+                    val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                    hitResults?.firstOrNull {
+                        it.isValid(
+                            depthPoint = true,
+                            point = false,
+                        )
+                    }?.createAnchorOrNull()?.let { anchor ->
+                        planeRenderer = false
+
+                        val sourceVertex =
+                            (childNodes[clickedNode] ?: childNodes[clickedNode?.parent]) as Vertex
+                        val destinationVertex =
+                            (childNodes[node] ?: childNodes[node.parent]) as Vertex
+
+                        val edgeNode = drawerHelper.drawEdge(
+                            destinationVertex = node,
+                            sourceVertex = clickedNode!!,
+                            engine = engine,
+                            anchor = anchor
+                        )
+
+                        childNodes[edgeNode] = Edge(
+                            id = Random.nextLong(), sourceVertex, destinationVertex,
+                            Vector3.subtract(
+                                sourceVertex.coordinates.toVector3(),
+                                destinationVertex.coordinates.toVector3()
+                            ).length().toLong()
+                        ).also(onCreateEdge)
+                    }
+
+                    clickedNode = null
+                }
+            })
     )
 }
 
-private fun createEdgeAnchor(
-    destinationVertex: Node,
-    sourceVertex: Node,
-    engine: Engine,
-    anchor: Anchor,
-): Node {
-    val pointA = sourceVertex.worldPosition.toVector3()
-    val pointB = destinationVertex.worldPosition.toVector3()
-
-    val difference = Vector3.subtract(pointA, pointB)
-    val directionFromTopToBottom = difference.normalized()
-    val rotationFromAToB = Quaternion.lookRotation(directionFromTopToBottom, Vector3.up())
-
-    val anchorNode = AnchorNode(engine = engine, anchor = anchor)
-    val edgeNode = CubeNode(
-        engine = engine,
-        size = Float3(0.01f, 0.01f, difference.length()),
-        center = Vector3.zero().toFloat3()
-    ).apply {
-        parent = anchorNode
-        worldPosition = Vector3.add(pointA, pointB).scaled(0.5f).toFloat3()
-        worldRotation = rotationFromAToB.toNewQuaternion().toRotation()
-    }
-
-    return edgeNode
-}
-
-private fun removeNode(node: Node?) {
-    node?.destroy()
-}
-
-private fun createVertexAnchor(
-    engine: Engine,
-    modelLoader: ModelLoader,
-    materialLoader: MaterialLoader,
-    modelInstances: MutableList<ModelInstance>,
-    anchor: Anchor,
-): Node {
-    val anchorNode = AnchorNode(engine = engine, anchor = anchor)
-    val modelNode = ModelNode(
-        modelInstance = modelInstances.apply {
-            if (isEmpty()) {
-                this += modelLoader.createInstancedModel("models/cylinder.glb", 1)
-            }
-        }.removeLast(), scaleToUnits = 0.1f
-    ).apply {
-        isEditable = true
-        isPositionEditable = false
-        isRotationEditable = false
-        isShadowCaster = false
-        isShadowReceiver = false
-    }
-
-    val boundingBoxNode = CubeNode(
-        engine,
-        size = modelNode.extents,
-        center = modelNode.center,
-        materialInstance = materialLoader.createColorInstance(Color.White.copy(alpha = 0.5f))
-    ).apply {
-        isVisible = false
-    }
-
-    modelNode.addChildNode(boundingBoxNode)
-    anchorNode.addChildNode(modelNode)
-
-    listOf(modelNode, anchorNode).forEach {
-        it.onEditingChanged = { editingTransforms ->
-            boundingBoxNode.isVisible = editingTransforms.isNotEmpty()
+@Composable
+fun rememberNodesMap(creator: MutableMap<Node, Any>.() -> Unit = {}) = remember {
+    buildMap(creator).toList().toMutableStateMap()
+}.also { nodes ->
+    DisposableEffect(nodes) {
+        onDispose {
+            nodes.forEach { it.key.destroy() }
+            nodes.clear()
         }
     }
-
-    return modelNode
 }
 
 @DefaultPreview
 @Composable
 private fun AdminModeContentPreview() {
     ARNavigationTheme {
-        AdminModeContent()
+        AdminModeScreen()
     }
 }

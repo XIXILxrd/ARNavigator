@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
-class GraphRepositoryImplementation(
+class GraphRepositoryImplementation @Inject constructor(
     private val graphDatabase: GraphDatabase,
 ) : GraphRepository {
     override suspend fun createVertex(vertex: Vertex): Vertex {
@@ -78,7 +78,7 @@ class GraphRepositoryImplementation(
 
     override suspend fun removeEdges(source: Vertex) {
         withContext(Dispatchers.IO) {
-            graphDatabase.graph.removeEdges(source = source.toVertexDbo())
+            graphDatabase.graph.removeEdge(vertexId = source.id)
         }
     }
 

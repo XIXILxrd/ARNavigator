@@ -3,9 +3,10 @@ package dev.xixil.navigation.domain.pathfinding
 import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 import java.util.PriorityQueue
+import javax.inject.Inject
 import kotlin.math.abs
 
-class AStar : Pathfinding {
+class AStar @Inject constructor() : Pathfinding {
     override fun findPath(
         start: Vertex,
         finish: Vertex,

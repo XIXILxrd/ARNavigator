@@ -10,9 +10,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableException
+import dagger.hilt.android.AndroidEntryPoint
 import dev.xixil.navigation.ui.screens.AdminModeScreen
 import dev.xixil.navigation.ui.theme.ARNavigationTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +25,6 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface
                 ) {
-
                     if (isARCoreSupportedAndUpToDate()) {
                         AdminModeScreen()
                     } else {

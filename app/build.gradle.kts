@@ -53,6 +53,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.runtime)
     implementation(libs.ar.sceneview)
 
     implementation(libs.compose.viewmodel)
@@ -74,6 +75,7 @@ dependencies {
 
     implementation(libs.arcore)
 
+    implementation(libs.dagger.hilt.navigation)
     implementation(libs.dagger.hilt)
     kapt(libs.dagger.hilt.compiler)
 

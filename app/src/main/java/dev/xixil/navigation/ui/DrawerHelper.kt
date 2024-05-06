@@ -1,43 +1,114 @@
 package dev.xixil.navigation.ui
 
 
+import androidx.compose.runtime.snapshots.SnapshotStateMap
+import com.google.android.filament.Engine
 import com.google.ar.core.Anchor
 import dev.romainguy.kotlin.math.Float3
-import dev.xixil.navigation.domain.models.Vertex
-import io.github.sceneview.ar.ARSceneView
-import io.github.sceneview.math.Scale
+import dev.xixil.navigation.domain.models.Edge
+import io.github.sceneview.ar.node.AnchorNode
+import io.github.sceneview.collision.Quaternion
+import io.github.sceneview.collision.Vector3
+import io.github.sceneview.loaders.ModelLoader
+import io.github.sceneview.math.toFloat3
+import io.github.sceneview.math.toNewQuaternion
+import io.github.sceneview.math.toRotation
+import io.github.sceneview.math.toVector3
+import io.github.sceneview.model.ModelInstance
+import io.github.sceneview.node.CubeNode
+import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 
 class DrawerHelper {
-    companion object {
-        private val arrowScale = Scale(0.5f, 0.5f, 0.5f)
-        private val pathScale = Scale(0.1f)
-        private const val pathModel = "models/cylinder.glb"
-        private const val selectionModel = "models/cone.glb"
-        private const val arrowAnimationDelay = 2L
-        private const val arrowAnimationPart = 15
-        private const val bias = 0.15f
+    fun drawVertex(
+        engine: Engine,
+        modelLoader: ModelLoader,
+        modelInstances: MutableList<ModelInstance>,
+        anchor: Anchor,
+    ): Node {
+        val anchorNode = AnchorNode(engine = engine, anchor = anchor)
+        val modelNode = ModelNode(
+            modelInstance = modelInstances.apply {
+                if (isEmpty()) {
+                    this += modelLoader.createInstancedModel("models/cylinder.glb", 1)
+                }
+            }.removeLast(), scaleToUnits = 0.1f
+        ).apply {
+            isEditable = false
+            isPositionEditable = false
+            isRotationEditable = false
+            isShadowCaster = false
+            isShadowReceiver = false
+        }
+
+        anchorNode.addChildNode(modelNode)
+
+        return anchorNode
     }
 
-    suspend fun drawVertex(
-        vertex: Vertex,
-        surfaceView: ARSceneView,
-        anchor: Anchor? = null,
+    fun drawEdge(
+        destinationVertex: Node,
+        sourceVertex: Node,
+        engine: Engine,
+        anchor: Anchor,
     ): Node {
-        TODO()
+        val pointA = sourceVertex.worldPosition.toVector3()
+        val pointB = destinationVertex.worldPosition.toVector3()
+
+        val difference = Vector3.subtract(pointA, pointB)
+        val directionFromTopToBottom = difference.normalized()
+        val rotationFromAToB = Quaternion.lookRotation(directionFromTopToBottom, Vector3.up())
+
+        val anchorNode = AnchorNode(engine = engine, anchor = anchor)
+        val edgeNode = CubeNode(
+            engine = engine,
+            size = Float3(0.01f, 0.01f, difference.length()),
+            center = Vector3.zero().toFloat3()
+        ).apply {
+            parent = anchorNode
+            worldPosition = Vector3.add(pointA, pointB).scaled(0.5f).toFloat3()
+            worldRotation = rotationFromAToB.toNewQuaternion().toRotation()
+        }
+
+        return edgeNode
     }
 
-    suspend fun drawArNode(
-        model: String,
-        scale: Scale,
-        position: Float3,
-        surfaceView: ARSceneView,
-        anchor: Anchor? = null,
-    ): Node {
+    fun drawNodesFromDatabase(
+        drawerHelper: DrawerHelper,
+        engine: Engine,
+        modelLoader: ModelLoader,
+        modelInstances: MutableList<ModelInstance>,
+        anchor: Anchor,
+        edge: Edge,
+        childNodes: SnapshotStateMap<Node, Any>,
+    ) {
+        val sourceVertex = drawerHelper.drawVertex(
+            engine = engine,
+            modelLoader = modelLoader,
+            modelInstances = modelInstances,
+            anchor = anchor
+        ).apply {
+            worldPosition = edge.source.coordinates
+        }
 
+        val destinationVertex = drawerHelper.drawVertex(
+            engine = engine,
+            modelLoader = modelLoader,
+            modelInstances = modelInstances,
+            anchor = anchor
+        ).apply {
+            worldPosition = edge.destination.coordinates
+        }
 
-        TODO()
+        val edgeNode = drawerHelper.drawEdge(
+            sourceVertex = sourceVertex,
+            destinationVertex = destinationVertex,
+            engine = engine,
+            anchor = anchor
+        )
+
+        childNodes[sourceVertex] = edge.source
+        childNodes[destinationVertex] = edge.destination
+        childNodes[edgeNode] = edge
     }
 }
-
-

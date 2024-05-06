@@ -29,8 +29,11 @@ interface GraphDao {
     @Query("SELECT * FROM vertices")
     fun getVertices(): Flow<List<VertexDbo>>
 
+    @Query("DELETE FROM edges WHERE sourcevertexId=:vertexId OR destinationvertexId=:vertexId")
+    suspend fun removeEdge(vertexId: Long)
+
     @Delete
-    suspend fun removeEdges(source: VertexDbo)
+    suspend fun removeEdgeByDestination(destination: VertexDbo)
 
     @Delete
     suspend fun removeVertex(vertex: VertexDbo)
