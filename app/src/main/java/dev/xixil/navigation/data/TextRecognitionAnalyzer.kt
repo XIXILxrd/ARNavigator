@@ -16,8 +16,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TextRecognitionAnalyzer(
+class TextRecognitionAnalyzer @Inject constructor(
     private val onDetectedTextUpdated: (String) -> Unit,
 ) : ImageAnalysis.Analyzer {
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -25,7 +26,6 @@ class TextRecognitionAnalyzer(
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     private var imageCropPercentages: Pair<Int, Int> =
         Pair(DESIRED_HEIGHT_CROP_PERCENT, DESIRED_WIDTH_CROP_PERCENT)
-
 
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {

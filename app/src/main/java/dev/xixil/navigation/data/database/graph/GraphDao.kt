@@ -26,6 +26,9 @@ interface GraphDao {
     @Query("SELECT * FROM vertices WHERE vertexId=:vertexId")
     suspend fun getVertex(vertexId: Long): VertexDbo
 
+    @Query("SELECT * FROM vertices WHERE data=:name")
+    suspend fun getVertex(name: String): VertexDbo
+
     @Query("SELECT * FROM vertices")
     fun getVertices(): Flow<List<VertexDbo>>
 

@@ -56,6 +56,12 @@ class GraphRepositoryImplementation @Inject constructor(
         }
     }
 
+    suspend fun getVertexByName(vertexName: String): Vertex {
+        return withContext(Dispatchers.IO) {
+            graphDatabase.graph.getVertex(vertexName).toVertex()
+        }
+    }
+
     override fun getGraph(): Flow<Map<Vertex, List<Edge>>> {
         val graph: MutableMap<Vertex, List<Edge>> = mutableMapOf()
 
@@ -75,6 +81,29 @@ class GraphRepositoryImplementation @Inject constructor(
             }
         }
     }
+
+    fun getGraphs(): Map<Vertex, List<Edge>> {
+        val graph: MutableMap<Vertex, List<Edge>> = mutableMapOf()
+
+        flow {
+            graphDatabase.graph.getAllEdges().collect { edges ->
+                edges.forEach { edge ->
+                    val source = edge.source.toVertex()
+
+                    if (!graph.containsKey(source)) {
+                        graph[source] =
+                            edges.filter { it.source == source.toVertexDbo() }
+                                .map { edgeDbo -> edgeDbo.toEdge() }
+                    }
+                }
+
+                emit(graph.toMap())
+            }
+        }
+
+        return graph
+    }
+
 
     override suspend fun removeEdges(source: Vertex) {
         withContext(Dispatchers.IO) {
