@@ -75,7 +75,7 @@ fun SmallTextField(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+            modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
             maxLines = 1
         )
     }

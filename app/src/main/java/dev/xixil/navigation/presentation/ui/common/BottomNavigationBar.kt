@@ -27,6 +27,11 @@ fun BottomNavigationBar(
         BottomNavItem.UserProfileScreen
     )
 
+//    val screens = mutableListOf(
+//        BottomNavItem.HomeScreen,
+//        BottomNavItem.AdminModeScreen,
+//    )
+
     NavigationBar(
         modifier = modifier
             .wrapContentHeight()

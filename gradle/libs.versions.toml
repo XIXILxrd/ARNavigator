@@ -22,6 +22,9 @@ kotlin-math = "1.5.3"
 sceneview = "2.1.0"
 hiltNavigationCompose = "1.2.0"
 compose-runtime = "1.6.7"
+googleGmsGoogleServices = "4.4.1"
+firebase-bom = "33.0.0"
+firebaseFirestoreKtx = "25.0.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -72,6 +75,10 @@ kotlin-math = { module = "dev.romainguy:kotlin-math", version.ref = "kotlin-math
 compose-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "activityCompose" }
 
 ar-sceneview = { module = "io.github.sceneview:arsceneview", version.ref= "sceneview"}
+firebase-database = { group = "com.google.firebase", name = "firebase-database" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom"}
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -79,3 +86,4 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }

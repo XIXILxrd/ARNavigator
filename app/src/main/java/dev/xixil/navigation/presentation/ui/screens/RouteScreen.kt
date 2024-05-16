@@ -19,15 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingFailureReason
 import dev.xixil.navigation.R
-import dev.xixil.navigation.data.database.graph.GraphDatabase
-import dev.xixil.navigation.data.repository.GraphRepositoryImplementation
 import dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.common.TravelTimeBar
@@ -117,9 +114,6 @@ private fun ARRouteContent(modifier: Modifier = Modifier) {
     var trackingFailureReason by remember {
         mutableStateOf<TrackingFailureReason?>(null)
     }
-
-    val graphRepository =
-        GraphRepositoryImplementation(graphDatabase = GraphDatabase(LocalContext.current))
 
     ARScene(
         modifier = Modifier.fillMaxSize(),

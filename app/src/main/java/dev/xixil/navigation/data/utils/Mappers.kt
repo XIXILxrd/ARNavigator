@@ -25,15 +25,17 @@ fun Record.toRecordDbo() = RecordDbo(
 fun Vertex.toVertexDbo() = VertexDbo(
     vertexId = id,
     data = data,
-    coordinateX = coordinates.x,
-    coordinateY = coordinates.y,
-    coordinateZ = coordinates.z
+    cloudAnchorId = cloudAnchorId,
+    x = coordinates.x,
+    y = coordinates.y,
+    z = coordinates.z
 )
 
-fun Edge.toEdgeDto() = EdgeDbo(
+fun Edge.toEdgeDbo() = EdgeDbo(
     edgeId = id,
     source = source.toVertexDbo(),
     destination = destination.toVertexDbo(),
+    cloudAnchorId = cloudAnchorId,
     weight = weight
 )
 
@@ -41,15 +43,13 @@ fun EdgeDbo.toEdge() = Edge(
     id = edgeId,
     source = source.toVertex(),
     destination = destination.toVertex(),
+    cloudAnchorId = cloudAnchorId,
     weight = weight
 )
 
 fun VertexDbo.toVertex() = Vertex(
     id = vertexId,
     data = data,
-    coordinates = Float3(
-        coordinateX,
-        coordinateY,
-        coordinateZ
-    )
+    cloudAnchorId = cloudAnchorId,
+    coordinates = Float3(x, y, z)
 )

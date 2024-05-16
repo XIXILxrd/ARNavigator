@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kapt)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -35,11 +36,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -56,6 +57,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.database)
+    implementation(platform(libs.firebase.bom))
+
     implementation(libs.androidx.compose.runtime)
     implementation(libs.ar.sceneview)
 
@@ -80,6 +84,7 @@ dependencies {
 
     implementation(libs.dagger.hilt.navigation)
     implementation(libs.dagger.hilt)
+    implementation(libs.firebase.firestore.ktx)
     kapt(libs.dagger.hilt.compiler)
 
     implementation(libs.room)

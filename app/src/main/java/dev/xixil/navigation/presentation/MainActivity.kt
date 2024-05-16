@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun NavigationHost(navController: NavController, modifier: Modifier) {
+fun NavigationHost(navController: NavController, modifier: Modifier = Modifier){
     NavHost(
         navController = navController as NavHostController,
         startDestination = Screen.HomeScreen.route,
@@ -103,32 +103,32 @@ fun NavigationHost(navController: NavController, modifier: Modifier) {
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None }
     ) {
-        navigation(
-            startDestination = Screen.DirectionsScreen.route,
-            route = "BuildPath"
-        ) {
-            composable(Screen.DirectionsScreen.route) {
-                DirectionsScreen()
-            }
-            composable(Screen.SearchVertexScreen.route) {
-                SearchVertexScreen()
-            }
-            composable(Screen.RouteScreen.route) {
-                RouteScreen()
-            }
-        }
+//        navigation(
+//            startDestination = Screen.DirectionsScreen.route,
+//            route = "BuildPath"
+//        ) {
+//            composable(Screen.DirectionsScreen.route) {
+//                DirectionsScreen()
+//            }
+//            composable(Screen.SearchVertexScreen.route) {
+//                SearchVertexScreen()
+//            }
+//            composable(Screen.RouteScreen.route) {
+//                RouteScreen()
+//            }
+//        }
         composable(Screen.HomeScreen.route) {
             PresentModal { HomeScreen() }
 //            HomeScreen()
         }
-        composable(Screen.SearchVertexScreen.route) {
-            PresentModal { SearchVertexScreen() }
-//            SearchVertexScreen()
-        }
-        composable(Screen.UserProfileScreen.route) {
-            PresentModal { UserProfileScreen() }
-//            UserProfileScreen()
-        }
+//        composable(Screen.SearchVertexScreen.route) {
+//            PresentModal { SearchVertexScreen() }
+////            SearchVertexScreen()
+//        }
+//        composable(Screen.UserProfileScreen.route) {
+//            PresentModal { UserProfileScreen() }
+////            UserProfileScreen()
+//        }
         composable(Screen.AdminModeScreen.route) {
             PresentModal { AdminModeScreen() }
 //            AdminModeScreen()

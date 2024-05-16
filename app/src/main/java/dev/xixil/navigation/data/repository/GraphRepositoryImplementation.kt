@@ -1,126 +1,99 @@
 package dev.xixil.navigation.data.repository
 
-import dev.xixil.navigation.data.database.graph.GraphDatabase
+import dev.xixil.navigation.data.database.graph.GraphFirebase
 import dev.xixil.navigation.data.database.graph.models.EdgeDbo
+import dev.xixil.navigation.data.database.graph.models.VertexDbo
 import dev.xixil.navigation.data.utils.toEdge
-import dev.xixil.navigation.data.utils.toEdgeDto
+import dev.xixil.navigation.data.utils.toEdgeDbo
 import dev.xixil.navigation.data.utils.toVertex
 import dev.xixil.navigation.data.utils.toVertexDbo
 import dev.xixil.navigation.domain.GraphRepository
+import dev.xixil.navigation.domain.RequestResult
+import dev.xixil.navigation.domain.map
 import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
-import kotlinx.coroutines.Dispatchers
+import dev.xixil.navigation.domain.toRequestResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
-import kotlin.random.Random
 
 class GraphRepositoryImplementation @Inject constructor(
-    private val graphDatabase: GraphDatabase,
+    private val graphFirebase: GraphFirebase,
 ) : GraphRepository {
-    override suspend fun createVertex(vertex: Vertex): Vertex {
-        withContext(Dispatchers.IO) {
-            graphDatabase.graph.createVertex(vertex.toVertexDbo())
-        }
-
-        return vertex
+    override suspend fun createVertex(vertex: Vertex) {
+        graphFirebase.addVertex(
+            vertex.toVertexDbo()
+        )
     }
 
     override suspend fun addUndirectedEdge(edge: Edge) {
-        withContext(Dispatchers.IO) {
-            graphDatabase.graph.addUndirectedEdge(edge.toEdgeDto())
-            graphDatabase.graph.addUndirectedEdge(
-                EdgeDbo(
-                    edgeId = Random.nextLong(),
-                    source = edge.destination.toVertexDbo(),
-                    destination = edge.source.toVertexDbo(),
-                    weight = edge.weight
-                )
-            )
-        }
+        graphFirebase.addEdge(edgeDbo = edge.toEdgeDbo())
     }
 
-    override fun getEdges(source: Vertex): Flow<List<Edge>> {
-        return graphDatabase.graph.getEdges(sourceId = source.id).map {
-            it.map { edgeDbo ->
-                edgeDbo.toEdge()
+    override fun getEdges(source: Vertex): Flow<RequestResult<List<Edge>>> {
+        val start = flowOf<RequestResult<List<EdgeDbo>>>(RequestResult.Loading())
+        val request = graphFirebase.getEdges(source = source.toVertexDbo())
+            .map { result -> result.toRequestResult() }
+
+        return merge(start, request).map { result: RequestResult<List<EdgeDbo>> ->
+            result.map { edgesDbo ->
+                edgesDbo.map { edgeDbo ->
+                    edgeDbo.toEdge()
+                }
             }
         }
     }
 
-    override suspend fun getVertex(vertexId: Long): Vertex {
-        return withContext(Dispatchers.IO) {
-            graphDatabase.graph.getVertex(vertexId).toVertex()
-        }
-    }
+//    override suspend fun getVertex(vertexId: Long): Vertex {
+//        return graphFirebase.getVertex(vertexId)
+//    }
 
-    suspend fun getVertexByName(vertexName: String): Vertex {
-        return withContext(Dispatchers.IO) {
-            graphDatabase.graph.getVertex(vertexName).toVertex()
-        }
-    }
+    override fun getGraph(): Flow<RequestResult<Map<Vertex, List<Edge>>>> {
+        //:)
+        val start = flowOf<RequestResult<Map<Vertex, List<Edge>>>>(RequestResult.Loading())
 
-    override fun getGraph(): Flow<Map<Vertex, List<Edge>>> {
-        val graph: MutableMap<Vertex, List<Edge>> = mutableMapOf()
+        val allEdgesFlow = graphFirebase.getAllEdges().map { result -> result.toRequestResult() }
+        val allVerticesFlow =
+            graphFirebase.getAllVertices().map { result -> result.toRequestResult() }
 
-        return flow {
-            graphDatabase.graph.getAllEdges().collect { edges ->
-                edges.forEach { edge ->
-                    val source = edge.source.toVertex()
-
-                    if (!graph.containsKey(source)) {
-                        graph[source] =
-                            edges.filter { it.source == source.toVertexDbo() }
-                                .map { edgeDbo -> edgeDbo.toEdge() }
+        val result =
+            allVerticesFlow.combineTransform(allEdgesFlow) { verticesResult: RequestResult<List<VertexDbo>>, edgesResult: RequestResult<List<EdgeDbo>> ->
+                val map = mutableMapOf<Vertex, List<Edge>>()
+                verticesResult.map { vertices ->
+                    vertices.forEach {
+                        map[it.toVertex()]
                     }
                 }
 
-                emit(graph.toMap())
-            }
-        }
-    }
-
-    fun getGraphs(): Map<Vertex, List<Edge>> {
-        val graph: MutableMap<Vertex, List<Edge>> = mutableMapOf()
-
-        flow {
-            graphDatabase.graph.getAllEdges().collect { edges ->
-                edges.forEach { edge ->
-                    val source = edge.source.toVertex()
-
-                    if (!graph.containsKey(source)) {
-                        graph[source] =
-                            edges.filter { it.source == source.toVertexDbo() }
-                                .map { edgeDbo -> edgeDbo.toEdge() }
+                edgesResult.map { edges ->
+                    edges.forEach { edge ->
+                        map[edge.source.toVertex()] = edges.filter { it.source == edge.source }.map { it.toEdge() }
                     }
                 }
 
-                emit(graph.toMap())
+                if (map.isNotEmpty()) {
+                    emit(RequestResult.Success(map.toMap()))
+                } else {
+                    emit(RequestResult.Error(Throwable("Graph is empty")))
+                }
             }
-        }
 
-        return graph
+        return merge(start, result)
     }
 
+    override suspend fun removeEdge(edge: Edge) {
+        graphFirebase.removeEdge(edge.toEdgeDbo())
+    }
 
     override suspend fun removeEdges(source: Vertex) {
-        withContext(Dispatchers.IO) {
-            graphDatabase.graph.removeEdge(vertexId = source.id)
-        }
+        graphFirebase.removeEdges(source = source.toVertexDbo())
     }
 
     override suspend fun removeVertex(vertex: Vertex) {
-        withContext(Dispatchers.IO) {
-            graphDatabase.graph.removeVertex(vertex = vertex.toVertexDbo())
-        }
-    }
-
-    override suspend fun clear() {
-        withContext(Dispatchers.IO) {
-            graphDatabase.graph.removeAllEdges()
-            graphDatabase.graph.removeAllVertices()
-        }
+        graphFirebase.removeVertex(vertexDbo = vertex.toVertexDbo())
     }
 }

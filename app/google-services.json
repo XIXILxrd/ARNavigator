@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "600239879419",
+    "project_id": "arnavigation-422816",
+    "storage_bucket": "arnavigation-422816.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600239879419:android:38afcfbd33db1e32312c5e",
+        "android_client_info": {
+          "package_name": "dev.xixil.navigation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "600239879419-ltle1b8l4573g24kdp2v28ue82pv4l2d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.xixil.navigation",
+            "certificate_hash": "7e321c477a961a43f6f3f709a219613f563f5320"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMxwOOXFQXqUx7f4GJk9t06sraYkAtDu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

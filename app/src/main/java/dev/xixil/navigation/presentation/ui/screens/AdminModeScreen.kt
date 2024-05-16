@@ -1,58 +1,67 @@
 package dev.xixil.navigation.presentation.ui.screens
 
-import android.util.Log
+import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.toMutableStateMap
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
-import com.google.ar.core.Anchor.CloudAnchorState
+import com.google.android.filament.Engine
+import com.google.ar.core.Anchor
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
+import com.google.ar.core.Pose
 import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
-import dev.romainguy.kotlin.math.Float3
 import dev.xixil.navigation.R
 import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
-import dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
+import dev.xixil.navigation.presentation.MainActivity
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
+import dev.xixil.navigation.presentation.utils.DisplayRotationHelper
 import dev.xixil.navigation.presentation.utils.DrawerHelper
+import dev.xixil.navigation.presentation.utils.rememberCameraNode2
 import dev.xixil.navigation.presentation.viewmodels.AdminModeViewModel
+import dev.xixil.navigation.presentation.viewmodels.ViewModelState
 import io.github.sceneview.ar.ARScene
+import io.github.sceneview.ar.arcore.canHostCloudAnchor
 import io.github.sceneview.ar.arcore.createAnchorOrNull
 import io.github.sceneview.ar.arcore.isValid
+import io.github.sceneview.ar.node.ARCameraNode
 import io.github.sceneview.ar.node.CloudAnchorNode
-import io.github.sceneview.ar.rememberARCameraNode
-import io.github.sceneview.collision.Vector3
 import io.github.sceneview.loaders.ModelLoader
-import io.github.sceneview.math.toVector3
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
@@ -61,17 +70,21 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.StateFlow
 import kotlin.random.Random
 
 @Composable
-fun AdminModeScreen(viewModel: AdminModeViewModel = hiltViewModel()) {
+fun AdminModeScreen(
+    audience: String = ""
+) {
+    val viewModel: AdminModeViewModel = hiltViewModel()
     ARNavigationTheme {
         AdminModeContent(
             onCreateVertex = { viewModel.createVertex(it) },
             onRemoveVertex = { viewModel.removeVertex(it) },
             onCreateEdge = { viewModel.createEdge(it) },
             onRemoveEdge = { viewModel.removeEdge(it) },
+            onObserveGraph = viewModel.graphState
         )
     }
 }
@@ -82,72 +95,19 @@ private fun AdminModeContent(
     onCreateVertex: (Vertex) -> Unit,
     onCreateEdge: (Edge) -> Unit,
     onRemoveVertex: (Vertex) -> Unit,
-    onRemoveEdge: (Vertex) -> Unit,
-) {
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
-    BottomSheetScaffold(
-        modifier = Modifier.fillMaxWidth(),
-        scaffoldState = scaffoldState,
-        sheetContainerColor = Color.White,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetContent = {
-            BottomSheetContent()
-        }) { innerPadding ->
-        ARAdminContent(
-            onCreateVertex = onCreateVertex,
-            onCreateEdge = onCreateEdge,
-            onRemoveEdge = onRemoveEdge,
-            onRemoveVertex = onRemoveVertex,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        )
-    }
-}
-
-@Composable
-fun BottomSheetContent(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        SmallTextField(
-            modifier = Modifier.weight(0.5f),
-            placeholder = stringResource(id = R.string.to_text)
-        ) {
-            ""
-        }
-        SmallTextField(
-            modifier = Modifier.weight(0.5f),
-            placeholder = stringResource(id = R.string.from_text)
-        ) {
-            ""
-        }
-    }
-}
-
-@Composable
-private fun ARAdminContent(
-    onCreateVertex: (Vertex) -> Unit,
-    onCreateEdge: (Edge) -> Unit,
-    onRemoveVertex: (Vertex) -> Unit,
-    onRemoveEdge: (Vertex) -> Unit,
+    onRemoveEdge: (Edge) -> Unit,
+    onObserveGraph: StateFlow<ViewModelState>,
     modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
 ) {
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
 
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    val cameraNode = rememberARCameraNode(engine)
+    val cameraNode = rememberCameraNode2(engine)
     val childNodes = rememberNodesMap()
     val view = rememberView(engine)
     val collisionSystem = rememberCollisionSystem(view)
     var frame by remember { mutableStateOf<Frame?>(null) }
-    var planeRenderer by remember { mutableStateOf(true) }
     val modelInstances = remember { mutableListOf<ModelInstance>() }
     var trackingFailureReason by remember {
         mutableStateOf<TrackingFailureReason?>(null)
@@ -155,45 +115,80 @@ private fun ARAdminContent(
     var clickedNode by remember { mutableStateOf<Node?>(null) }
     val context = LocalContext.current
 
-    ARScene(
-        modifier = modifier.fillMaxSize(),
-        childNodes = childNodes.keys.toList(),
-        engine = engine,
-        view = view,
-        lifecycle = lifecycleOwner.lifecycle,
-        modelLoader = modelLoader,
-        collisionSystem = collisionSystem,
-        sessionConfiguration = { session, config ->
-            config.focusMode = Config.FocusMode.AUTO
-            config.depthMode = when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-                true -> Config.DepthMode.AUTOMATIC
-                else -> Config.DepthMode.DISABLED
-            }
-            config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-            config.lightEstimationMode = Config.LightEstimationMode.DISABLED
-            config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
-        },
-        cameraNode = cameraNode,
-        planeRenderer = planeRenderer,
-        onTrackingFailureChanged = {
-            trackingFailureReason = it
-        },
-        onSessionUpdated = { _, updatedFrame ->
-            frame = updatedFrame
-        },
-        onGestureListener = rememberOnGestureListener(
-            onSingleTapConfirmed = { motionEvent, node ->
-                if (node == null) {
-                    val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
-                    hitResults?.firstOrNull {
-                        it.isValid(
-                            depthPoint = true,
-                            point = false,
-                        )
-                    }?.createAnchorOrNull()?.let { anchor ->
-                        planeRenderer = false
+    val graphState = onObserveGraph.collectAsState()
 
-                        scope.launch {
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    val displayRotationHelper = DisplayRotationHelper(context)
+
+    BottomSheetScaffold(
+        modifier = Modifier.fillMaxSize(),
+        sheetPeekHeight = 48.dp,
+        scaffoldState = scaffoldState,
+        sheetContainerColor = Color.White,
+        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        sheetContent = {
+            BottomSheetContent(
+                modifier,
+                cameraNode,
+                drawerHelper,
+                graphState,
+                context,
+                engine,
+                modelInstances,
+                modelLoader,
+                childNodes
+            )
+        }) { innerPadding ->
+
+        ARScene(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            childNodes = childNodes.keys.toList(),
+            engine = engine,
+            view = view,
+            lifecycle = lifecycleOwner.lifecycle,
+            activity = LocalContext.current as MainActivity,
+            modelLoader = modelLoader,
+            collisionSystem = collisionSystem,
+            sessionConfiguration = { session, config ->
+                config.focusMode = Config.FocusMode.AUTO
+                config.depthMode = when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+                    true -> Config.DepthMode.AUTOMATIC
+                    else -> Config.DepthMode.DISABLED
+                }
+                config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
+                config.lightEstimationMode = Config.LightEstimationMode.DISABLED
+                config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
+            },
+            cameraNode = cameraNode,
+            planeRenderer = true,
+            onTrackingFailureChanged = {
+                trackingFailureReason = it
+            },
+            onSessionResumed = {
+                displayRotationHelper.onResume()
+                cameraNode.onTrackingStateChanged(TrackingState.TRACKING)
+            },
+            onSessionPaused = {
+                displayRotationHelper.onPause()
+                cameraNode.onTrackingStateChanged(TrackingState.PAUSED)
+                it.close()
+            },
+            onSessionUpdated = { _, updatedFrame ->
+                frame = updatedFrame
+            },
+            onGestureListener = rememberOnGestureListener(
+                onSingleTapConfirmed = { motionEvent, node ->
+                    if (node == null) {
+                        val hitResults = frame?.hitTest(motionEvent.x, motionEvent.y)
+                        hitResults?.firstOrNull {
+                            it.isValid(
+                                depthPoint = true,
+                                point = false,
+                            )
+                        }?.createAnchorOrNull()?.let { anchor ->
                             val vertexNode = ModelNode(
                                 modelInstance = modelInstances.apply {
                                     if (isEmpty()) {
@@ -205,86 +200,204 @@ private fun ARAdminContent(
                                 }.removeLast(), scaleToUnits = 0.1f
                             )
 
-                            CloudAnchorNode(engine, anchor).apply {
-                                addChildNode(vertexNode)
-                            }.also {
-                                it.host(
-                                    cameraNode.session!!, 1
-                                ) { cloudId, state ->
-                                    childNodes[it] = Vertex(
-                                        id = Random.nextLong(),
-                                        data = cloudId,
-                                        coordinates = vertexNode.worldPosition
-                                    ).also(onCreateVertex)
+                            if (cameraNode.trackingState == TrackingState.TRACKING) {
+                                cameraNode.session?.let { currentSession ->
+                                    if (!currentSession.canHostCloudAnchor(cameraNode)) {
+                                        Toast.makeText(
+                                            context,
+                                            "Cant host cloud node",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
 
-                                    Toast.makeText(
-                                        context,
-                                        "$cloudId is $state",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                    Log.d("CloudAnchorTest", "$cloudId")
+                                        vertexNode.destroy()
+                                        return@rememberOnGestureListener
+                                    }
+
+                                    CloudAnchorNode(engine = engine, anchor = anchor).apply {
+                                        host(
+                                            session = currentSession,
+                                            ttlDays = 1
+                                        ) { cloudAnchorId, state ->
+                                            if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
+                                                vertexNode.parent = this
+
+                                                childNodes[vertexNode] = Vertex(
+                                                    id = Random.nextLong(),
+                                                    data = "",
+                                                    cloudAnchorId = cloudAnchorId,
+                                                    coordinates = vertexNode.worldPosition
+                                                ).also(onCreateVertex)
+
+                                                Toast.makeText(context, "Vertex has been added", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                childNodes.remove(vertexNode)
+                                                vertexNode.destroy()
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            },
-            onLongPress = { _, node ->
-                if (node == null) {
-                    return@rememberOnGestureListener
-                }
-
-                val element = childNodes[node] ?: childNodes[node.parent]
-
-                when (element) {
-                    is Edge -> {
-                        onRemoveEdge(element.source)
-                        node.destroy()
-                        node.parent?.destroy()
+                },
+                onLongPress = { _, node ->
+                    if (node == null) {
+                        return@rememberOnGestureListener
                     }
 
-                    is Vertex -> {
-                        onRemoveVertex(element)
-                        node.destroy()
-                        node.parent?.destroy()
+                    childNodes[node]?.let { element ->
+                        when (element) {
+                            is Edge -> {
+                                onRemoveEdge(element)
+                                childNodes.remove(node)
+                                Toast.makeText(context, "Edge has been removed", Toast.LENGTH_SHORT).show()
+                                node.destroy()
+                                node.parent?.destroy()
+                            }
+
+                            is Vertex -> {
+                                onRemoveVertex(element)
+                                childNodes.remove(node)
+                                Toast.makeText(context, "Vertex has been removed", Toast.LENGTH_SHORT).show()
+                                node.destroy()
+                                node.parent?.destroy()
+                            }
+                        }
+                    }
+                },
+                onDoubleTap = { _, node ->
+                    if (node == null) {
+                        return@rememberOnGestureListener
+                    }
+
+                    if (clickedNode == null) {
+                        clickedNode = node
+                        return@rememberOnGestureListener
+                    }
+
+                    if (clickedNode != node) {
+                        val sourceVertex =
+                            (childNodes[clickedNode] ?: childNodes[clickedNode?.parent]) as Vertex
+                        val destinationVertex =
+                            (childNodes[node] ?: childNodes[node.parent]) as Vertex
+
+                        val edgeNode = drawerHelper.drawEdge(
+                            destinationVertex = node,
+                            sourceVertex = clickedNode!!,
+                            engine = engine,
+                        )
+
+                        if (cameraNode.trackingState == TrackingState.TRACKING) {
+                            cameraNode.session?.let { currentSession ->
+                                CloudAnchorNode(
+                                    engine = engine,
+                                    cameraNode.pose?.let {
+                                        currentSession.earth?.createAnchorOrNull(
+                                            it
+                                        )
+                                    }
+                                        ?: currentSession.createAnchor(Pose(node.worldPosition.toFloatArray(), cameraNode.pose?.rotationQuaternion))
+                                ).apply {
+                                    host(
+                                        session = currentSession,
+                                        ttlDays = 1
+                                    ) { cloudAnchorId, state ->
+                                        if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
+                                            edgeNode.addChildNode(this)
+
+                                            childNodes[edgeNode] = Edge(
+                                                id = Random.nextLong(),
+                                                source = sourceVertex,
+                                                destination = destinationVertex,
+                                                cloudAnchorId = cloudAnchorId,
+                                                weight = drawerHelper.calculateWeight(
+                                                    sourceVertex,
+                                                    destinationVertex
+                                                )
+                                            ).also(onCreateEdge)
+
+                                            Toast.makeText(context, "Edge has been added", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            childNodes.remove(edgeNode)
+                                            edgeNode.destroy()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        clickedNode = null
+                    }
+                })
+        )
+    }
+}
+
+@Composable
+private fun BottomSheetContent(
+    modifier: Modifier,
+    cameraNode: ARCameraNode,
+    drawerHelper: DrawerHelper,
+    graphState: State<ViewModelState>,
+    context: Context,
+    engine: Engine,
+    modelInstances: MutableList<ModelInstance>,
+    modelLoader: ModelLoader,
+    childNodes: SnapshotStateMap<Node, Any>,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SmallTextField(
+                modifier = Modifier.weight(0.5f),
+                placeholder = stringResource(id = R.string.to_text)
+            ) {
+                ""
+            }
+            SmallTextField(
+                modifier = Modifier.weight(0.5f),
+                placeholder = stringResource(id = R.string.from_text)
+            ) {
+                ""
+            }
+        }
+
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+            onClick = {
+                if (cameraNode.trackingState == TrackingState.TRACKING) {
+                    cameraNode.session?.let { currentSession ->
+                            drawerHelper.loadGraph(
+                                graphState,
+                                context,
+                                engine,
+                                currentSession,
+                                modelInstances,
+                                modelLoader,
+                                childNodes
+                            )
                     }
                 }
-            },
-            onDoubleTap = { _, node ->
-                if (node == null) {
-                    return@rememberOnGestureListener
-                }
-
-                if (clickedNode == null) {
-                    clickedNode = node
-                    return@rememberOnGestureListener
-                }
-
-                if (clickedNode != node) {
-                    val sourceVertex =
-                        (childNodes[clickedNode] ?: childNodes[clickedNode?.parent]) as Vertex
-                    val destinationVertex =
-                        (childNodes[node] ?: childNodes[node.parent]) as Vertex
-
-                    val edgeNode = drawerHelper.drawEdge(
-                        destinationVertex = node,
-                        sourceVertex = clickedNode!!,
-                        engine = engine,
-                    )
-
-                    childNodes[edgeNode] = Edge(
-                        id = Random.nextLong(), sourceVertex, destinationVertex,
-                        Vector3.subtract(
-                            sourceVertex.coordinates.toVector3(),
-                            destinationVertex.coordinates.toVector3()
-                        ).length().toLong()
-                    ).also(onCreateEdge)
-
-                    clickedNode = null
-                }
-            })
-    )
+            }) {
+            Image(
+                imageVector = Icons.Outlined.CloudDownload,
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(Color.White)
+            )
+        }
+    }
 }
 
 @Composable
@@ -296,13 +409,5 @@ fun rememberNodesMap(creator: MutableMap<Node, Any>.() -> Unit = {}) = remember 
             nodes.forEach { it.key.destroy() }
             nodes.clear()
         }
-    }
-}
-
-@DefaultPreview
-@Composable
-private fun AdminModeContentPreview() {
-    ARNavigationTheme {
-        AdminModeScreen()
     }
 }

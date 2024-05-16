@@ -49,9 +49,9 @@ fun CameraContent(
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val cameraController: LifecycleCameraController =
         remember { LifecycleCameraController(context) }
-
     var detectedText: String by remember { mutableStateOf("") }
     val onTextUpdated: (String) -> Unit = { detectedText = it }
+
 
     Box(
         modifier = modifier
