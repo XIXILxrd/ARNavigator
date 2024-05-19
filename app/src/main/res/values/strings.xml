@@ -28,5 +28,6 @@
     <string name="route_screen_title">Route</string>
     <string name="search_screen_title">Search</string>
     <string name="user_profile_screen_title">Profile</string>
+    <string name="next_text_button">Next</string>
 
 </resources>

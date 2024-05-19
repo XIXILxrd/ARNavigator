@@ -142,26 +142,27 @@ class DrawerHelper {
             is ViewModelState.Success -> {
                 state.graph.values.map { listOfEdges ->
                     listOfEdges.forEach { edge ->
+                        val sourceNode = ModelNode(
+                            modelInstance = modelInstances.apply {
+                                if (isEmpty()) {
+                                    this += modelLoader.createInstancedModel(
+                                        "models/cylinder.glb",
+                                        1
+                                    )
+                                }
+                            }.removeLast(), scaleToUnits = 0.1f
+                        )
+
                         CloudAnchorNode.resolve(
                             engine = engine,
                             session = session,
                             edge.source.cloudAnchorId
                         ) { state, node ->
                             if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                ModelNode(
-                                    modelInstance = modelInstances.apply {
-                                        if (isEmpty()) {
-                                            this += modelLoader.createInstancedModel(
-                                                "models/cylinder.glb",
-                                                1
-                                            )
-                                        }
-                                    }.removeLast(), scaleToUnits = 0.1f
-                                ).apply {
-                                    parent = node
-                                    childNodes[this] = edge.source
-                                }
+                                sourceNode.parent = node
+                                childNodes[sourceNode] = edge.source
                             } else {
+                                sourceNode.destroy()
                                 Toast.makeText(
                                     context,
                                     "Cant resolve vertex",
@@ -169,6 +170,17 @@ class DrawerHelper {
                                 ).show()
                             }
                         }
+
+                        val destinationNode = ModelNode(
+                            modelInstance = modelInstances.apply {
+                                if (isEmpty()) {
+                                    this += modelLoader.createInstancedModel(
+                                        "models/cylinder.glb",
+                                        1
+                                    )
+                                }
+                            }.removeLast(), scaleToUnits = 0.1f
+                        )
 
                         CloudAnchorNode.resolve(
                             engine = engine,
@@ -176,19 +188,8 @@ class DrawerHelper {
                             edge.destination.cloudAnchorId
                         ) { state, node ->
                             if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                ModelNode(
-                                    modelInstance = modelInstances.apply {
-                                        if (isEmpty()) {
-                                            this += modelLoader.createInstancedModel(
-                                                "models/cylinder.glb",
-                                                1
-                                            )
-                                        }
-                                    }.removeLast(), scaleToUnits = 0.1f
-                                ).apply {
-                                    parent = node
-                                    childNodes[this] = edge.destination
-                                }
+                                destinationNode.parent = node
+                                childNodes[destinationNode] = edge.destination
                             } else {
                                 Toast.makeText(
                                     context,
@@ -198,23 +199,25 @@ class DrawerHelper {
                             }
                         }
 
+
+                        val edgeNode = drawEdge(
+                            sourceVertex = edge.source.coordinates,
+                            destinationVertex = edge.destination.coordinates,
+                            engine = engine
+                        )
+
+                        childNodes[edgeNode] = edge
+
                         CloudAnchorNode.resolve(
                             engine = engine,
                             session = session,
                             cloudAnchorId = edge.cloudAnchorId
                         ) { state, node ->
                             if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                drawEdge(
-                                    sourceVertex = childNodes.getKeyByValue(edge.source)?.worldPosition
-                                        ?: edge.source.coordinates,
-                                    destinationVertex = childNodes.getKeyByValue(edge.destination)?.worldPosition
-                                        ?: edge.destination.coordinates,
-                                    engine = engine
-                                ).apply {
-                                    this.parent = node
-                                    childNodes[this] = edge.destination
-                                }
+                                edgeNode.addChildNode(node)
+                                childNodes[edgeNode] = edge
                             } else {
+                                edgeNode.destroy()
                                 Toast.makeText(
                                     context,
                                     "Cant resolve edge",

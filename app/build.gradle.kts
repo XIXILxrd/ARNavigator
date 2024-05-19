@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kapt)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -57,6 +58,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.kotlinx.serialization)
+
     implementation(libs.firebase.database)
     implementation(platform(libs.firebase.bom))
 
@@ -82,7 +85,7 @@ dependencies {
 
     implementation(libs.arcore)
 
-    implementation(libs.dagger.hilt.navigation)
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
     implementation(libs.firebase.firestore.ktx)
     kapt(libs.dagger.hilt.compiler)

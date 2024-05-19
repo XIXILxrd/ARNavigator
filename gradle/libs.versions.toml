@@ -10,7 +10,7 @@ lifecycleRuntimeKtx = "2.7.0"
 activityCompose = "1.9.0"
 composeBom = "2024.05.00"
 materialIconsExtended = "1.6.7"
-navigationCompose = "2.7.7"
+navigationCompose = "2.8.0-beta01"
 room = "2.6.1"
 kotlin-ksp = "1.9.23-1.0.19"
 kotlinxCoroutines = "1.8.0"
@@ -20,11 +20,12 @@ mlkit = "16.0.0"
 camerax = "1.3.3"
 kotlin-math = "1.5.3"
 sceneview = "2.1.0"
-hiltNavigationCompose = "1.2.0"
 compose-runtime = "1.6.7"
 googleGmsGoogleServices = "4.4.1"
 firebase-bom = "33.0.0"
 firebaseFirestoreKtx = "25.0.0"
+kotlinSerialization = "1.6.3"
+hiltNavigationCompose = "1.2.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -63,7 +64,6 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 
 dagger-hilt = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
 dagger-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger" }
-dagger-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose"}
 
 camera-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
@@ -74,10 +74,14 @@ kotlin-math = { module = "dev.romainguy:kotlin-math", version.ref = "kotlin-math
 
 compose-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "activityCompose" }
 
-ar-sceneview = { module = "io.github.sceneview:arsceneview", version.ref= "sceneview"}
+ar-sceneview = { module = "io.github.sceneview:arsceneview", version.ref = "sceneview" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom"}
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+
+kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
+
+androidx-hilt-navigation-compose = { group ="androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose"}
 
 
 [plugins]
@@ -87,3 +91,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

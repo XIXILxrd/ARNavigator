@@ -3,6 +3,7 @@ package dev.xixil.navigation.presentation.ui.screens
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,7 +41,7 @@ import com.google.android.filament.Engine
 import com.google.ar.core.Anchor
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
-import com.google.ar.core.Pose
+import com.google.ar.core.Plane
 import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
 import dev.xixil.navigation.R
@@ -58,6 +58,7 @@ import dev.xixil.navigation.presentation.viewmodels.ViewModelState
 import io.github.sceneview.ar.ARScene
 import io.github.sceneview.ar.arcore.canHostCloudAnchor
 import io.github.sceneview.ar.arcore.createAnchorOrNull
+import io.github.sceneview.ar.arcore.getUpdatedPlanes
 import io.github.sceneview.ar.arcore.isValid
 import io.github.sceneview.ar.node.ARCameraNode
 import io.github.sceneview.ar.node.CloudAnchorNode
@@ -75,11 +76,16 @@ import kotlin.random.Random
 
 @Composable
 fun AdminModeScreen(
-    audience: String = ""
+    source: String,
+    destination: String,
+    onAddAudience: () -> Unit,
 ) {
     val viewModel: AdminModeViewModel = hiltViewModel()
     ARNavigationTheme {
         AdminModeContent(
+            source = source,
+            destination = destination,
+            onAddAudience = onAddAudience,
             onCreateVertex = { viewModel.createVertex(it) },
             onRemoveVertex = { viewModel.removeVertex(it) },
             onCreateEdge = { viewModel.createEdge(it) },
@@ -92,6 +98,9 @@ fun AdminModeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdminModeContent(
+    source: String,
+    destination: String,
+    onAddAudience: () -> Unit,
     onCreateVertex: (Vertex) -> Unit,
     onCreateEdge: (Edge) -> Unit,
     onRemoveVertex: (Vertex) -> Unit,
@@ -99,7 +108,7 @@ private fun AdminModeContent(
     onObserveGraph: StateFlow<ViewModelState>,
     modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
 ) {
-    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner: LifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
@@ -129,6 +138,8 @@ private fun AdminModeContent(
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
             BottomSheetContent(
+                source,
+                destination,
                 modifier,
                 cameraNode,
                 drawerHelper,
@@ -137,7 +148,8 @@ private fun AdminModeContent(
                 engine,
                 modelInstances,
                 modelLoader,
-                childNodes
+                childNodes,
+                onAddAudience
             )
         }) { innerPadding ->
 
@@ -229,7 +241,11 @@ private fun AdminModeContent(
                                                     coordinates = vertexNode.worldPosition
                                                 ).also(onCreateVertex)
 
-                                                Toast.makeText(context, "Vertex has been added", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Vertex has been added",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             } else {
                                                 childNodes.remove(vertexNode)
                                                 vertexNode.destroy()
@@ -251,7 +267,8 @@ private fun AdminModeContent(
                             is Edge -> {
                                 onRemoveEdge(element)
                                 childNodes.remove(node)
-                                Toast.makeText(context, "Edge has been removed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Edge has been removed", Toast.LENGTH_SHORT)
+                                    .show()
                                 node.destroy()
                                 node.parent?.destroy()
                             }
@@ -259,7 +276,11 @@ private fun AdminModeContent(
                             is Vertex -> {
                                 onRemoveVertex(element)
                                 childNodes.remove(node)
-                                Toast.makeText(context, "Vertex has been removed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "Vertex has been removed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 node.destroy()
                                 node.parent?.destroy()
                             }
@@ -290,40 +311,42 @@ private fun AdminModeContent(
 
                         if (cameraNode.trackingState == TrackingState.TRACKING) {
                             cameraNode.session?.let { currentSession ->
-                                CloudAnchorNode(
-                                    engine = engine,
-                                    cameraNode.pose?.let {
-                                        currentSession.earth?.createAnchorOrNull(
-                                            it
-                                        )
-                                    }
-                                        ?: currentSession.createAnchor(Pose(node.worldPosition.toFloatArray(), cameraNode.pose?.rotationQuaternion))
-                                ).apply {
-                                    host(
-                                        session = currentSession,
-                                        ttlDays = 1
-                                    ) { cloudAnchorId, state ->
-                                        if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
-                                            edgeNode.addChildNode(this)
+                                frame?.getUpdatedPlanes()
+                                    ?.firstOrNull { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }
+                                    ?.let { it.createAnchorOrNull(it.centerPose) }?.let { anchor ->
+                                        CloudAnchorNode(
+                                            engine = engine, anchor = anchor
+                                        ).apply {
+                                            host(
+                                                session = currentSession,
+                                                ttlDays = 1
+                                            ) { cloudAnchorId, state ->
+                                                if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
+                                                    edgeNode.addChildNode(this)
 
-                                            childNodes[edgeNode] = Edge(
-                                                id = Random.nextLong(),
-                                                source = sourceVertex,
-                                                destination = destinationVertex,
-                                                cloudAnchorId = cloudAnchorId,
-                                                weight = drawerHelper.calculateWeight(
-                                                    sourceVertex,
-                                                    destinationVertex
-                                                )
-                                            ).also(onCreateEdge)
+                                                    childNodes[edgeNode] = Edge(
+                                                        id = Random.nextLong(),
+                                                        source = sourceVertex,
+                                                        destination = destinationVertex,
+                                                        cloudAnchorId = cloudAnchorId,
+                                                        weight = drawerHelper.calculateWeight(
+                                                            sourceVertex,
+                                                            destinationVertex
+                                                        )
+                                                    ).also(onCreateEdge)
 
-                                            Toast.makeText(context, "Edge has been added", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            childNodes.remove(edgeNode)
-                                            edgeNode.destroy()
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Edge has been added",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    childNodes.remove(edgeNode)
+                                                    edgeNode.destroy()
+                                                }
+                                            }
                                         }
                                     }
-                                }
                             }
                         }
 
@@ -336,6 +359,8 @@ private fun AdminModeContent(
 
 @Composable
 private fun BottomSheetContent(
+    source: String,
+    destination: String,
     modifier: Modifier,
     cameraNode: ARCameraNode,
     drawerHelper: DrawerHelper,
@@ -345,7 +370,16 @@ private fun BottomSheetContent(
     modelInstances: MutableList<ModelInstance>,
     modelLoader: ModelLoader,
     childNodes: SnapshotStateMap<Node, Any>,
+    onAddAudience: () -> Unit
 ) {
+    val sourceFieldText by remember {
+        mutableStateOf(source)
+    }
+
+    val destinationFieldText by remember {
+        mutableStateOf(destination)
+    }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -357,16 +391,18 @@ private fun BottomSheetContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             SmallTextField(
-                modifier = Modifier.weight(0.5f),
+                modifier = Modifier.weight(0.5f)
+                    .clickable { onAddAudience() },
                 placeholder = stringResource(id = R.string.to_text)
             ) {
-                ""
+                sourceFieldText
             }
             SmallTextField(
-                modifier = Modifier.weight(0.5f),
+                modifier = Modifier.weight(0.5f)
+                    .clickable { onAddAudience() },
                 placeholder = stringResource(id = R.string.from_text)
             ) {
-                ""
+                destinationFieldText
             }
         }
 
@@ -378,16 +414,18 @@ private fun BottomSheetContent(
             shape = RoundedCornerShape(12.dp),
             onClick = {
                 if (cameraNode.trackingState == TrackingState.TRACKING) {
+                    childNodes.clear()
+
                     cameraNode.session?.let { currentSession ->
-                            drawerHelper.loadGraph(
-                                graphState,
-                                context,
-                                engine,
-                                currentSession,
-                                modelInstances,
-                                modelLoader,
-                                childNodes
-                            )
+                        drawerHelper.loadGraph(
+                            graphState,
+                            context,
+                            engine,
+                            currentSession,
+                            modelInstances,
+                            modelLoader,
+                            childNodes
+                        )
                     }
                 }
             }) {

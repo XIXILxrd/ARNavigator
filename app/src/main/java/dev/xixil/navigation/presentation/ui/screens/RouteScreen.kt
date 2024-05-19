@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingFailureReason
@@ -29,8 +30,9 @@ import dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.common.TravelTimeBar
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
+import dev.xixil.navigation.presentation.utils.rememberCameraNode2
+import dev.xixil.navigation.presentation.viewmodels.RouteViewModel
 import io.github.sceneview.ar.ARScene
-import io.github.sceneview.ar.rememberARCameraNode
 import io.github.sceneview.model.ModelInstance
 import io.github.sceneview.rememberCollisionSystem
 import io.github.sceneview.rememberEngine
@@ -38,25 +40,28 @@ import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
 
 @Composable
-fun RouteScreen() {
-    ARNavigationTheme {
-        RouteScreenContent()
-    }
-}
+fun RouteScreen(
+    source: String,
+    destination: String,
+    onBack: () -> Unit
+) {
+    val viewModel: RouteViewModel = hiltViewModel()
 
-@DefaultPreview
-@Composable
-private fun RouteScreenPreview() {
     ARNavigationTheme {
-        RouteScreenContent()
+        RouteScreenContent(
+            source = source,
+            destination = destination,
+            onBack = onBack
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RouteScreenContent(
-    from: String = "1",
-    to: String = "2",
+    source: String,
+    destination: String,
+    onBack: () -> Unit
 ) {
     val scaffoldState = rememberBottomSheetScaffoldState()
     val hours by remember { mutableIntStateOf(0) }
@@ -77,13 +82,13 @@ private fun RouteScreenContent(
                     modifier = Modifier.weight(0.5f),
                     placeholder = stringResource(id = R.string.to_text)
                 ) {
-                    from
+                    source
                 }
                 SmallTextField(
                     modifier = Modifier.weight(0.5f),
                     placeholder = stringResource(id = R.string.from_text)
                 ) {
-                    to
+                    destination
                 }
             }
 
@@ -104,12 +109,11 @@ private fun RouteScreenContent(
 private fun ARRouteContent(modifier: Modifier = Modifier) {
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
-    val cameraNode = rememberARCameraNode(engine)
+    val cameraNode = rememberCameraNode2(engine)
     val childNodes = rememberNodesMap()
     val view = rememberView(engine)
     val collisionSystem = rememberCollisionSystem(view)
     var frame by remember { mutableStateOf<Frame?>(null) }
-    var planeRenderer by remember { mutableStateOf(true) }
     val modelInstances = remember { mutableListOf<ModelInstance>() }
     var trackingFailureReason by remember {
         mutableStateOf<TrackingFailureReason?>(null)
@@ -132,7 +136,7 @@ private fun ARRouteContent(modifier: Modifier = Modifier) {
             config.lightEstimationMode = Config.LightEstimationMode.DISABLED
         },
         cameraNode = cameraNode,
-        planeRenderer = planeRenderer,
+        planeRenderer = false,
         onTrackingFailureChanged = {
             trackingFailureReason = it
         },
