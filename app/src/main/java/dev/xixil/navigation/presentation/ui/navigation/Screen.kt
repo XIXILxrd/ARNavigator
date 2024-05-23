@@ -1,36 +1,27 @@
 package dev.xixil.navigation.presentation.ui.navigation
 
-import kotlinx.serialization.Serializable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Route
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.ui.graphics.vector.ImageVector
 
-@Serializable
-sealed class Screen {
-    @Serializable
-    data class AdminModeScreen(val source: String = "", val destination: String = "") : Screen() {
-        @Serializable
-        object HomeScreen: Screen()
+sealed class Screen(val route: String, val icon: ImageVector) {
+    object Home : Screen("home", Icons.Outlined.Home)
+    object AdminMode : Screen("adminMode", Icons.Default.Route) {
+        object Home : Screen("home", Icons.Outlined.Home)
+        object AdminScreen : Screen("adminScreen", Icons.Default.Route)
     }
 
-    @Serializable
-    object ChooseRoute : Screen() {
-        @Serializable
-        data class DirectionsScreen(val source: String = "", val destination: String = ""): Screen()
-
-        @Serializable
-        object HomeScreen : Screen()
-
-        @Serializable
-        object SearchVertexScreen : Screen()
-
-        @Serializable
-        data class RouteScreen(val source: String = "", val destination: String = "") : Screen()
-
+    object Directions : Screen("directions", Icons.Outlined.Route) {
+        object Direction : Screen("directionScreen", Icons.Outlined.Route)
+        object Route : Screen("routeScreen", Icons.Outlined.Person)
+        object Search : Screen("search", Icons.Outlined.Search)
     }
 
-    @Serializable
-    object HomeScreen : Screen()
-
-    @Serializable
-    object UserProfileScreen : Screen()
+    object Profile: Screen("profile", Icons.Outlined.Person)
 }
 
 

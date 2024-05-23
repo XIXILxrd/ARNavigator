@@ -1,20 +1,18 @@
 package dev.xixil.navigation.presentation.viewmodels
 
 import dev.xixil.navigation.domain.RequestResult
-import dev.xixil.navigation.domain.models.Edge
-import dev.xixil.navigation.domain.models.Vertex
 
-sealed class ViewModelState {
-    object None : ViewModelState()
+sealed class ViewModelState<T> {
+    class None<T>() : ViewModelState<T>()
 
-    class Loading() : ViewModelState()
+    class Loading<T>() : ViewModelState<T>()
 
-    class Error(val error: Throwable? = null) : ViewModelState()
+    class Error<T>(val error: Throwable? = null) : ViewModelState<T>()
 
-    class Success(val graph: Map<Vertex, List<Edge>>) : ViewModelState()
+    class Success<T: Any>(val data: T) : ViewModelState<T>()
 }
 
-fun RequestResult<Map<Vertex, List<Edge>>>.toState(): ViewModelState {
+fun <T: Any> RequestResult<T>.toState(): ViewModelState<T> {
     return when (this) {
         is RequestResult.Error -> ViewModelState.Error(error)
         is RequestResult.Loading -> ViewModelState.Loading()

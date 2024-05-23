@@ -4,34 +4,16 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableException
 import dagger.hilt.android.AndroidEntryPoint
 import dev.xixil.navigation.presentation.ui.common.BottomNavigationBar
-import dev.xixil.navigation.presentation.ui.navigation.PresentModal
+import dev.xixil.navigation.presentation.ui.navigation.ApplicationNavigation
 import dev.xixil.navigation.presentation.ui.navigation.Screen
-import dev.xixil.navigation.presentation.ui.screens.AdminModeScreen
-import dev.xixil.navigation.presentation.ui.screens.DirectionsScreen
-import dev.xixil.navigation.presentation.ui.screens.HomeScreen
-import dev.xixil.navigation.presentation.ui.screens.RouteScreen
-import dev.xixil.navigation.presentation.ui.screens.SearchVertexScreen
-import dev.xixil.navigation.presentation.ui.screens.UserProfileScreen
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
 
 @AndroidEntryPoint
@@ -44,16 +26,14 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.surface),
                     bottomBar = { BottomNavigationBar(navController = navController) }
-
                 ) {
-                    NavigationHost(navController = navController, modifier = Modifier.padding(it))
-
                     if (isARCoreSupportedAndUpToDate()) {
-                        navController.navigate(Screen.HomeScreen.route)
+                        ApplicationNavigation(
+                            modifier = Modifier.padding(it),
+                            navController = navController,
+                            startDestination = Screen.Home.route
+                        )
                     } else {
                         Toast.makeText(this, "AR not installed", Toast.LENGTH_SHORT).show()
                     }
@@ -93,46 +73,4 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun NavigationHost(navController: NavController, modifier: Modifier = Modifier){
-    NavHost(
-        navController = navController as NavHostController,
-        startDestination = Screen.HomeScreen.route,
-        modifier = modifier,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None }
-    ) {
-//        navigation(
-//            startDestination = Screen.DirectionsScreen.route,
-//            route = "BuildPath"
-//        ) {
-//            composable(Screen.DirectionsScreen.route) {
-//                DirectionsScreen()
-//            }
-//            composable(Screen.SearchVertexScreen.route) {
-//                SearchVertexScreen()
-//            }
-//            composable(Screen.RouteScreen.route) {
-//                RouteScreen()
-//            }
-//        }
-        composable(Screen.HomeScreen.route) {
-            PresentModal { HomeScreen() }
-//            HomeScreen()
-        }
-//        composable(Screen.SearchVertexScreen.route) {
-//            PresentModal { SearchVertexScreen() }
-////            SearchVertexScreen()
-//        }
-//        composable(Screen.UserProfileScreen.route) {
-//            PresentModal { UserProfileScreen() }
-////            UserProfileScreen()
-//        }
-        composable(Screen.AdminModeScreen.route) {
-            PresentModal { AdminModeScreen() }
-//            AdminModeScreen()
-        }
-    }
-}
 

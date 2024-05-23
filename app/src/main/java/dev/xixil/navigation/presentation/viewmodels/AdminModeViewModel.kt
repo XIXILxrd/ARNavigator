@@ -30,10 +30,10 @@ class AdminModeViewModel @Inject constructor(
     private val getGraphUseCase: Provider<GetGraphUseCase>,
 ) : ViewModel() {
 
-    val graphState: StateFlow<ViewModelState> =
+    val graphState: StateFlow<ViewModelState<Map<Vertex, List<Edge>>>> =
         getGraphUseCase.get().invoke()
             .map(RequestResult<Map<Vertex, List<Edge>>>::toState)
-            .stateIn(viewModelScope, SharingStarted.Lazily, ViewModelState.None)
+            .stateIn(viewModelScope, SharingStarted.Lazily, ViewModelState.None())
 
     fun createVertex(vertex: Vertex) {
         viewModelScope.launch {

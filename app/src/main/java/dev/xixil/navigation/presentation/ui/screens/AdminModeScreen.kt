@@ -1,6 +1,7 @@
 package dev.xixil.navigation.presentation.ui.screens
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
@@ -49,6 +51,8 @@ import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 import dev.xixil.navigation.presentation.MainActivity
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
+import dev.xixil.navigation.presentation.ui.navigation.ApplicationArgument.AUDIENCE
+import dev.xixil.navigation.presentation.ui.navigation.ApplicationArgument.EMPTY_ARGUMENT
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
 import dev.xixil.navigation.presentation.utils.DisplayRotationHelper
 import dev.xixil.navigation.presentation.utils.DrawerHelper
@@ -76,15 +80,13 @@ import kotlin.random.Random
 
 @Composable
 fun AdminModeScreen(
-    source: String,
-    destination: String,
+    audience: String,
     onAddAudience: () -> Unit,
 ) {
     val viewModel: AdminModeViewModel = hiltViewModel()
     ARNavigationTheme {
         AdminModeContent(
-            source = source,
-            destination = destination,
+            audience = audience,
             onAddAudience = onAddAudience,
             onCreateVertex = { viewModel.createVertex(it) },
             onRemoveVertex = { viewModel.removeVertex(it) },
@@ -98,16 +100,17 @@ fun AdminModeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AdminModeContent(
-    source: String,
-    destination: String,
+    audience: String,
+    modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
+    onObserveGraph: StateFlow<ViewModelState<Map<Vertex, List<Edge>>>>,
     onAddAudience: () -> Unit,
     onCreateVertex: (Vertex) -> Unit,
     onCreateEdge: (Edge) -> Unit,
     onRemoveVertex: (Vertex) -> Unit,
     onRemoveEdge: (Edge) -> Unit,
-    onObserveGraph: StateFlow<ViewModelState>,
-    modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
 ) {
+    var audienceNumber by remember { mutableStateOf(audience) }
+
     val lifecycleOwner: LifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val engine = rememberEngine()
@@ -138,8 +141,7 @@ private fun AdminModeContent(
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         sheetContent = {
             BottomSheetContent(
-                source,
-                destination,
+                audienceNumber,
                 modifier,
                 cameraNode,
                 drawerHelper,
@@ -236,10 +238,12 @@ private fun AdminModeContent(
 
                                                 childNodes[vertexNode] = Vertex(
                                                     id = Random.nextLong(),
-                                                    data = "",
+                                                    data = if (audienceNumber != EMPTY_ARGUMENT && audienceNumber.isNotBlank()) audience else "",
                                                     cloudAnchorId = cloudAnchorId,
                                                     coordinates = vertexNode.worldPosition
                                                 ).also(onCreateVertex)
+
+                                                audienceNumber = ""
 
                                                 Toast.makeText(
                                                     context,
@@ -359,25 +363,20 @@ private fun AdminModeContent(
 
 @Composable
 private fun BottomSheetContent(
-    source: String,
-    destination: String,
+    audience: String,
     modifier: Modifier,
     cameraNode: ARCameraNode,
     drawerHelper: DrawerHelper,
-    graphState: State<ViewModelState>,
+    graphState: State<ViewModelState<Map<Vertex, List<Edge>>>>,
     context: Context,
     engine: Engine,
     modelInstances: MutableList<ModelInstance>,
     modelLoader: ModelLoader,
     childNodes: SnapshotStateMap<Node, Any>,
-    onAddAudience: () -> Unit
+    onAddAudience: () -> Unit,
 ) {
-    val sourceFieldText by remember {
-        mutableStateOf(source)
-    }
-
-    val destinationFieldText by remember {
-        mutableStateOf(destination)
+    val audienceField by remember {
+        mutableStateOf(audience)
     }
 
     Column(
@@ -391,19 +390,13 @@ private fun BottomSheetContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             SmallTextField(
-                modifier = Modifier.weight(0.5f)
-                    .clickable { onAddAudience() },
-                placeholder = stringResource(id = R.string.to_text)
-            ) {
-                sourceFieldText
-            }
-            SmallTextField(
-                modifier = Modifier.weight(0.5f)
-                    .clickable { onAddAudience() },
-                placeholder = stringResource(id = R.string.from_text)
-            ) {
-                destinationFieldText
-            }
+                modifier = Modifier
+                    .clickable {
+                        onAddAudience()
+                    },
+                placeholder = if (audienceField == EMPTY_ARGUMENT) stringResource(id = R.string.click_to_add_an_audience_text_placeholder) else audienceField,
+                textAlign = TextAlign.Center
+            )
         }
 
         Button(
@@ -416,16 +409,38 @@ private fun BottomSheetContent(
                 if (cameraNode.trackingState == TrackingState.TRACKING) {
                     childNodes.clear()
 
-                    cameraNode.session?.let { currentSession ->
-                        drawerHelper.loadGraph(
-                            graphState,
+                    when (val state = graphState.value) {
+                        is ViewModelState.Error -> Toast.makeText(
                             context,
-                            engine,
-                            currentSession,
-                            modelInstances,
-                            modelLoader,
-                            childNodes
-                        )
+                            "An error occurred during graph initialization",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        is ViewModelState.Loading -> Toast.makeText(
+                            context,
+                            "Loading the graph...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        is ViewModelState.None -> Toast.makeText(
+                            context,
+                            "None. ?:_)",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        is ViewModelState.Success -> {
+                            cameraNode.session?.let { currentSession ->
+                                drawerHelper.loadGraph(
+                                    state.data,
+                                    context,
+                                    engine,
+                                    currentSession,
+                                    modelInstances,
+                                    modelLoader,
+                                    childNodes
+                                )
+                            }
+                        }
                     }
                 }
             }) {

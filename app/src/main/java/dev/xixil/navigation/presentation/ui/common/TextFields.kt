@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.xixil.navigation.R
@@ -23,9 +24,7 @@ import dev.xixil.navigation.R
 @Preview
 @Composable
 private fun SmallTextFieldPreview() {
-    SmallTextField(placeholder = stringResource(id = R.string.from_text)) {
-        ""
-    }
+
 }
 
 @Composable
@@ -60,22 +59,22 @@ fun LargeTextField(
 fun SmallTextField(
     modifier: Modifier = Modifier,
     placeholder: String,
-    onClick: () -> String,
+    textAlign: TextAlign = TextAlign.Start
 ) {
-    var text by rememberSaveable { mutableStateOf(placeholder) }
+    val text by rememberSaveable { mutableStateOf(placeholder) }
 
     Surface(
         modifier = modifier
             .fillMaxWidth(),
         color = Color(0xFFEFF1F5),
         contentColor = Color(0xFFA09CAB),
-        onClick = { text = onClick() },
         shape = RoundedCornerShape(12.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
+            textAlign = textAlign,
             maxLines = 1
         )
     }

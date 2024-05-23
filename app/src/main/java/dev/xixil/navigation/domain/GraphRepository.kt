@@ -15,6 +15,8 @@ interface GraphRepository {
 
     fun getGraph(): Flow<RequestResult<Map<Vertex, List<Edge>>>>
 
+    fun getAllAudiences(): Flow<RequestResult<List<Vertex>>>
+
     suspend fun removeEdge(edge: Edge)
 
     suspend fun removeEdges(source: Vertex)

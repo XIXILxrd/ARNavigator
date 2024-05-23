@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,43 +31,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.xixil.navigation.R
-import dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
+import dev.xixil.navigation.domain.models.Vertex
 
-sealed class TabItem(var titleResId: Int, var screen: @Composable () -> Unit) {
-    data object Audiences : TabItem(
-        titleResId = R.string.audiences_text,
-        screen = {}
-    )
+sealed class TabItem(
+    open val titleResId: Int,
+    open val list: List<Any>,
+    open val screen: @Composable () -> Unit,
+) {
+    class Audiences(
+        override val titleResId: Int = R.string.audiences_text,
+        override val list: List<Vertex>,
+        override val screen: @Composable () -> Unit,
+    ) : TabItem(titleResId, list, screen)
 
-    data object Recent : TabItem(
-        titleResId = R.string.recent_text,
-        screen = {}
-    )
-}
-
-
-@Preview
-@Composable
-private fun TabPreview() {
-    Tabs()
-}
-
-@dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
-@Composable
-private fun TabScreenPreview() {
-    Tabs(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+    class Recent(
+        override val titleResId: Int = R.string.recent_text,
+        override val list: List<dev.xixil.navigation.domain.models.Record>,
+        override val screen: @Composable () -> Unit,
+    ) : TabItem(titleResId, list, screen)
 }
 
 @Composable
-fun Tabs(modifier: Modifier = Modifier) {
+fun Tabs(
+    modifier: Modifier = Modifier,
+    audiencesTabContent: List<Vertex>,
+    recentContent: List<dev.xixil.navigation.domain.models.Record>,
+) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     val tabs = listOf(
-        TabItem.Audiences, TabItem.Recent
+        TabItem.Audiences(
+            list = audiencesTabContent,
+            screen = {
+                LazyColumn {
+                    items(audiencesTabContent) { vertex ->
+                        AudienceItem(audienceNumberText = "${vertex.data}")
+                    }
+                }
+            }
+        ),
+        TabItem.Recent(
+            list = recentContent,
+            screen = {
+                LazyColumn {
+                    items(recentContent) { record ->
+                        AudienceHistoryItem(audienceNumberText = record.end)
+                    }
+                }
+            }
+        )
     )
 
     Surface(
@@ -79,7 +96,7 @@ fun Tabs(modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
             selectedTabIndex = tabIndex,
             containerColor = Color(0xFFEFF1F5),
-            indicator = {tabPositions ->
+            indicator = { tabPositions ->
                 CustomIndicator(tabPositions, tabIndex)
             },
             divider = { Spacer(modifier = Modifier.width(6.dp)) },
@@ -87,7 +104,10 @@ fun Tabs(modifier: Modifier = Modifier) {
                 tabs.forEachIndexed { index, tabItem ->
                     CustomTab(
                         selected = tabIndex == index,
-                        onClick = { tabIndex = index },
+                        onClick = {
+                            tabIndex = index
+                            tabItem.screen
+                        },
                         text = stringResource(id = tabItem.titleResId)
                     )
                 }

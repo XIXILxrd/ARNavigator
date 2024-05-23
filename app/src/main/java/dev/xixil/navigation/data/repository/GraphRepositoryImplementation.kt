@@ -13,12 +13,12 @@ import dev.xixil.navigation.domain.map
 import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 import dev.xixil.navigation.domain.toRequestResult
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class GraphRepositoryImplementation @Inject constructor(
@@ -71,7 +71,8 @@ class GraphRepositoryImplementation @Inject constructor(
 
                 edgesResult.map { edges ->
                     edges.forEach { edge ->
-                        map[edge.source.toVertex()] = edges.filter { it.source == edge.source }.map { it.toEdge() }
+                        map[edge.source.toVertex()] =
+                            edges.filter { it.source == edge.source }.map { it.toEdge() }
                     }
                 }
 
@@ -83,6 +84,30 @@ class GraphRepositoryImplementation @Inject constructor(
             }
 
         return merge(start, result)
+    }
+
+    override fun getAllAudiences(): Flow<RequestResult<List<Vertex>>> {
+        val start = flowOf<RequestResult<List<VertexDbo>>>(RequestResult.Loading())
+
+        val request = graphFirebase.getAllVertices().map { result ->
+            result.toRequestResult()
+        }.onEach { requestResult ->
+            if (requestResult is RequestResult.Success) {
+                requestResult.map { list ->
+                    list.filter {
+                        !it.data.isNullOrBlank()
+                    }
+                }
+            }
+        }
+
+        return merge(start, request).map { requestResult ->
+            requestResult.map { list ->
+                list.map {
+                    it.toVertex()
+                }
+            }
+        }
     }
 
     override suspend fun removeEdge(edge: Edge) {

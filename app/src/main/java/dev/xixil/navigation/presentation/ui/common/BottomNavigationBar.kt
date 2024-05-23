@@ -1,7 +1,6 @@
 package dev.xixil.navigation.presentation.ui.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -12,29 +11,22 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import dev.xixil.navigation.presentation.ui.navigation.BottomNavItem
+import dev.xixil.navigation.presentation.ui.navigation.Screen
 
 @Composable
 fun BottomNavigationBar(
-    navController: NavController,
     modifier: Modifier = Modifier,
+    navController: NavController
 ) {
-    val screens = mutableListOf(
-        BottomNavItem.HomeScreen,
-        BottomNavItem.SearchVertexScreen,
-        BottomNavItem.DirectionsScreen,
-        BottomNavItem.AdminModeScreen,
-        BottomNavItem.UserProfileScreen
+    val screens = listOf(
+        Screen.Home,
+        Screen.Directions.Direction,
+        Screen.AdminMode.AdminScreen,
+        Screen.Profile
     )
-
-//    val screens = mutableListOf(
-//        BottomNavItem.HomeScreen,
-//        BottomNavItem.AdminModeScreen,
-//    )
 
     NavigationBar(
         modifier = modifier
-            .wrapContentHeight()
             .fillMaxWidth()
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -55,6 +47,5 @@ fun BottomNavigationBar(
                 icon = { Icon(imageVector = screen.icon, contentDescription = null) }
             )
         }
-
     }
 }

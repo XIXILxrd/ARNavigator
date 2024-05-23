@@ -3,14 +3,13 @@ package dev.xixil.navigation.presentation.utils
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.google.android.filament.Engine
 import com.google.ar.core.Anchor
 import com.google.ar.core.Session
 import dev.romainguy.kotlin.math.Float3
+import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
-import dev.xixil.navigation.presentation.viewmodels.ViewModelState
 import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.ar.node.CloudAnchorNode
 import io.github.sceneview.collision.Quaternion
@@ -31,35 +30,6 @@ class DrawerHelper {
             source.coordinates.toVector3(),
             destination.coordinates.toVector3()
         ).length().toLong()
-    }
-
-    fun drawVertex(
-        engine: Engine,
-        anchor: Anchor,
-        modelLoader: ModelLoader,
-        modelInstances: MutableList<ModelInstance>,
-    ): Node {
-        val anchorNode = AnchorNode(engine, anchor).apply {
-            isEditable = false
-            isPositionEditable = false
-            isRotationEditable = false
-        }
-        val modelNode = ModelNode(
-            modelInstance = modelInstances.apply {
-                if (isEmpty()) {
-                    this += modelLoader.createInstancedModel("models/cylinder.glb", 1)
-                }
-            }.removeLast(), scaleToUnits = 0.1f
-        ).apply {
-            parent = anchorNode
-            isEditable = false
-            isPositionEditable = false
-            isRotationEditable = false
-            isShadowCaster = false
-            isShadowReceiver = false
-        }
-
-        return anchorNode
     }
 
     fun drawEdge(
@@ -110,8 +80,175 @@ class DrawerHelper {
         return edgeNode
     }
 
+//    fun loadGraph(
+//        graph: Map<Vertex, List<Edge>>,
+//        context: Context,
+//        engine: Engine,
+//        session: Session,
+//        modelInstances: MutableList<ModelInstance>,
+//        modelLoader: ModelLoader,
+//        childNodes: SnapshotStateMap<Node, Any>,
+//    ) {
+//        graph.values.map { listOfEdges ->
+//            listOfEdges.forEach { edge ->
+//                val sourceNode = ModelNode(
+//                    modelInstance = modelInstances.apply {
+//                        if (isEmpty()) {
+//                            this += modelLoader.createInstancedModel(
+//                                "models/cylinder.glb",
+//                                1
+//                            )
+//                        }
+//                    }.removeLast(), scaleToUnits = 0.1f
+//                )
+//
+//                CloudAnchorNode.resolve(
+//                    engine = engine,
+//                    session = session,
+//                    edge.source.cloudAnchorId
+//                ) { state, node ->
+//                    if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
+//                        sourceNode.parent = node
+//                        childNodes[sourceNode] = edge.source
+//                    } else {
+//                        sourceNode.destroy()
+//                        Toast.makeText(
+//                            context,
+//                            "Cant resolve vertex",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
+//                }
+//
+//                val destinationNode = ModelNode(
+//                    modelInstance = modelInstances.apply {
+//                        if (isEmpty()) {
+//                            this += modelLoader.createInstancedModel(
+//                                "models/cylinder.glb",
+//                                1
+//                            )
+//                        }
+//                    }.removeLast(), scaleToUnits = 0.1f
+//                )
+//
+//                CloudAnchorNode.resolve(
+//                    engine = engine,
+//                    session = session,
+//                    edge.destination.cloudAnchorId
+//                ) { state, node ->
+//                    if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
+//                        destinationNode.parent = node
+//                        childNodes[destinationNode] = edge.destination
+//                    } else {
+//                        Toast.makeText(
+//                            context,
+//                            "Cant resolve vertex",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
+//                }
+//
+//
+//                val edgeNode = drawEdge(
+//                    sourceVertex = edge.source.coordinates,
+//                    destinationVertex = edge.destination.coordinates,
+//                    engine = engine
+//                )
+//
+//                childNodes[edgeNode] = edge
+//
+//                CloudAnchorNode.resolve(
+//                    engine = engine,
+//                    session = session,
+//                    cloudAnchorId = edge.cloudAnchorId
+//                ) { state, node ->
+//                    if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
+//                        edgeNode.addChildNode(node)
+//                        childNodes[edgeNode] = edge
+//                    } else {
+//                        edgeNode.destroy()
+//                        Toast.makeText(
+//                            context,
+//                            "Cant resolve edge",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    private fun createAndResolveNode(
+        modelInstances: MutableList<ModelInstance>,
+        modelLoader: ModelLoader,
+        cloudAnchorId: String,
+        engine: Engine,
+        session: Session,
+        onSuccess: (Node) -> Unit,
+        onError: () -> Unit,
+    ) {
+        val modelNode = ModelNode(
+            modelInstance = modelInstances.apply {
+                if (isEmpty()) {
+                    this += modelLoader.createInstancedModel(
+                        "models/cylinder.glb",
+                        1
+                    )
+                }
+            }.removeLast(), scaleToUnits = 0.1f
+        )
+
+        CloudAnchorNode.resolve(
+            engine = engine,
+            session = session,
+            cloudAnchorId
+        ) { state, node ->
+            if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
+                modelNode.parent = node
+                onSuccess(modelNode)
+            } else {
+                modelNode.destroy()
+                onError()
+            }
+        }
+    }
+
+    private fun createAndResolveEdge(
+        edge: Edge,
+        engine: Engine,
+        session: Session,
+        sourceNode: Node,
+        destinationNode: Node,
+        childNodes: SnapshotStateMap<Node, Any>,
+        context: Context,
+    ) {
+        val edgeNode = drawEdge(
+            sourceVertex = sourceNode,
+            destinationVertex = destinationNode,
+            engine = engine
+        )
+
+        CloudAnchorNode.resolve(
+            engine = engine,
+            session = session,
+            cloudAnchorId = edge.cloudAnchorId
+        ) { state, node ->
+            if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
+                edgeNode.addChildNode(node)
+                childNodes[edgeNode] = edge
+            } else {
+                edgeNode.destroy()
+                Toast.makeText(
+                    context,
+                    "Can't resolve edge",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
     fun loadGraph(
-        graphState: State<ViewModelState>,
+        graph: Map<Vertex, List<Edge>>,
         context: Context,
         engine: Engine,
         session: Session,
@@ -119,124 +256,63 @@ class DrawerHelper {
         modelLoader: ModelLoader,
         childNodes: SnapshotStateMap<Node, Any>,
     ) {
-        when (val state = graphState.value) {
-            is ViewModelState.Error ->
-                Toast.makeText(
-                    context,
-                    "An error occurred during graph initialization",
-                    Toast.LENGTH_SHORT
-                ).show()
+        graph.values.forEach { listOfEdges ->
+            listOfEdges.forEach { edge ->
+                createAndResolveNode(
+                    modelInstances = modelInstances,
+                    modelLoader = modelLoader,
+                    cloudAnchorId = edge.source.cloudAnchorId,
+                    engine = engine,
+                    session = session,
+                    onSuccess = { sourceNode ->
+                        childNodes[sourceNode] = edge.source
 
-            is ViewModelState.Loading -> Toast.makeText(
-                context,
-                "Loading the graph...",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            is ViewModelState.None -> Toast.makeText(
-                context,
-                "None. ?:_)",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            is ViewModelState.Success -> {
-                state.graph.values.map { listOfEdges ->
-                    listOfEdges.forEach { edge ->
-                        val sourceNode = ModelNode(
-                            modelInstance = modelInstances.apply {
-                                if (isEmpty()) {
-                                    this += modelLoader.createInstancedModel(
-                                        "models/cylinder.glb",
-                                        1
-                                    )
-                                }
-                            }.removeLast(), scaleToUnits = 0.1f
-                        )
-
-                        CloudAnchorNode.resolve(
+                        createAndResolveNode(
+                            modelInstances = modelInstances,
+                            modelLoader = modelLoader,
+                            cloudAnchorId = edge.destination.cloudAnchorId,
                             engine = engine,
                             session = session,
-                            edge.source.cloudAnchorId
-                        ) { state, node ->
-                            if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                sourceNode.parent = node
-                                childNodes[sourceNode] = edge.source
-                            } else {
-                                sourceNode.destroy()
-                                Toast.makeText(
-                                    context,
-                                    "Cant resolve vertex",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-
-                        val destinationNode = ModelNode(
-                            modelInstance = modelInstances.apply {
-                                if (isEmpty()) {
-                                    this += modelLoader.createInstancedModel(
-                                        "models/cylinder.glb",
-                                        1
-                                    )
-                                }
-                            }.removeLast(), scaleToUnits = 0.1f
-                        )
-
-                        CloudAnchorNode.resolve(
-                            engine = engine,
-                            session = session,
-                            edge.destination.cloudAnchorId
-                        ) { state, node ->
-                            if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                destinationNode.parent = node
+                            onSuccess = { destinationNode ->
                                 childNodes[destinationNode] = edge.destination
-                            } else {
+                                createAndResolveEdge(
+                                    edge = edge,
+                                    engine = engine,
+                                    session = session,
+                                    sourceNode = sourceNode,
+                                    destinationNode = destinationNode,
+                                    childNodes = childNodes,
+                                    context = context
+                                )
+                            },
+                            onError = {
                                 Toast.makeText(
                                     context,
-                                    "Cant resolve vertex",
+                                    "Can't resolve destination vertex",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                        }
-
-
-                        val edgeNode = drawEdge(
-                            sourceVertex = edge.source.coordinates,
-                            destinationVertex = edge.destination.coordinates,
-                            engine = engine
                         )
-
-                        childNodes[edgeNode] = edge
-
-                        CloudAnchorNode.resolve(
-                            engine = engine,
-                            session = session,
-                            cloudAnchorId = edge.cloudAnchorId
-                        ) { state, node ->
-                            if (state == Anchor.CloudAnchorState.SUCCESS && node != null) {
-                                edgeNode.addChildNode(node)
-                                childNodes[edgeNode] = edge
-                            } else {
-                                edgeNode.destroy()
-                                Toast.makeText(
-                                    context,
-                                    "Cant resolve edge",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
+                    },
+                    onError = {
+                        Toast.makeText(
+                            context,
+                            "Can't resolve source vertex",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }
+                )
             }
         }
     }
+}
 
-    private fun <K, V> Map<K, V>.getKeyByValue(value: V): K? {
-        for ((key, entryValue) in this) {
-            if (entryValue == value) {
-                return key
-            }
+
+private fun <K, V> Map<K, V>.getKeyByValue(value: V): K? {
+    for ((key, entryValue) in this) {
+        if (entryValue == value) {
+            return key
         }
-        return null
     }
+    return null
 }

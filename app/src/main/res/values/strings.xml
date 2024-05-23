@@ -29,5 +29,8 @@
     <string name="search_screen_title">Search</string>
     <string name="user_profile_screen_title">Profile</string>
     <string name="next_text_button">Next</string>
+    <string name="correct_text_button">Correct</string>
+    <string name="dismiss_text_button">Dismiss</string>
+    <string name="click_to_add_an_audience_text_placeholder">Click to add an audience</string>
 
 </resources>

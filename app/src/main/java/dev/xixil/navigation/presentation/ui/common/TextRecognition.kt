@@ -11,16 +11,29 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,14 +44,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import dev.xixil.navigation.R
 import dev.xixil.navigation.data.TextRecognitionAnalyzer
+
 
 @Composable
 fun CameraContent(
@@ -46,12 +62,18 @@ fun CameraContent(
     modifier: Modifier = Modifier,
 ) {
     val context: Context = LocalContext.current
-    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner: LifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val cameraController: LifecycleCameraController =
         remember { LifecycleCameraController(context) }
-    var detectedText: String by remember { mutableStateOf("") }
-    val onTextUpdated: (String) -> Unit = { detectedText = it }
+    var detectedText by remember { mutableStateOf("") }
 
+    var dialogState by remember {
+        mutableStateOf(false)
+    }
+
+    val onTextUpdated: (String) -> Unit = {
+        detectedText = it
+    }
 
     Box(
         modifier = modifier
@@ -71,12 +93,12 @@ fun CameraContent(
                     setBackgroundColor(Color.Black.toArgb())
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                     scaleType = PreviewView.ScaleType.FILL_CENTER
-                }.also { previewView ->
+                }.also { preview ->
                     startTextRecognition(
                         context = context,
                         cameraController = cameraController,
                         lifecycleOwner = lifecycleOwner,
-                        previewView = previewView,
+                        previewView = preview,
                         onDetectedTextUpdated = onTextUpdated
                     )
                 }
@@ -84,11 +106,91 @@ fun CameraContent(
         )
 
         AnalysisArea(text = detectedText)
-    }
 
+        Button(onClick = {
+            dialogState = true
+        }) {
+            Text(text = "Scan")
+        }
+
+        if (dialogState) {
+            val text by remember {
+                mutableStateOf(detectedText)
+            }
+            ConfirmDetectedText(
+                detectedText = text,
+                onTextDetected = {
+                    onTextDetected(it)
+                    dialogState = false
+                },
+                onDismissRequest = {
+                    dialogState = false
+                }
+            )
+        }
+    }
 }
 
-/*TODO(replace function in the view model)*/
+@Preview
+@Composable
+private fun asd() {
+    ConfirmDetectedText(detectedText = "123", onTextDetected = {}) {}
+}
+
+@Composable
+private fun ConfirmDetectedText(
+    modifier: Modifier = Modifier,
+    detectedText: String,
+    onTextDetected: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    var selectedItem by remember {
+        mutableStateOf("")
+    }
+
+    AlertDialog(
+        modifier = modifier,
+        title = {
+            Text(
+                "Text is recognized correctly?",
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.9f),
+                    text = "$detectedText/$selectedItem",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Menu(modifier = Modifier.weight(0.1f)) {
+                    selectedItem = it
+                }
+            }
+        },
+        onDismissRequest = { onDismissRequest() },
+        dismissButton = {
+            TextButton(onClick = { onDismissRequest() }) {
+                Text(text = stringResource(id = R.string.dismiss_text_button))
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = selectedItem.isNotBlank(),
+                onClick = {
+                    onTextDetected("$detectedText/$selectedItem")
+                }) {
+                Text(text = stringResource(id = R.string.correct_text_button))
+            }
+        })
+}
+
 private fun startTextRecognition(
     context: Context,
     cameraController: LifecycleCameraController,
@@ -107,6 +209,36 @@ private fun startTextRecognition(
 }
 
 @Composable
+private fun Menu(modifier: Modifier = Modifier, selectedItem: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val buildings = listOf(
+        "1", "1а", "1б", "2", "2б", "2в", "3а", "3б", "3бв", "3г", "3д", "4", "5", "6", "6а"
+    )
+
+    Box(
+        modifier = modifier
+            .wrapContentSize()
+            .wrapContentSize(Alignment.TopStart)
+    ) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "Localized description")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            buildings.forEach {
+                DropdownMenuItem(text = { Text(it) }, onClick = {
+                    selectedItem(it)
+                })
+            }
+        }
+    }
+
+}
+
+@Composable
 fun NoPermissionContent(
     onRequestPermission: () -> Unit,
 ) {
@@ -122,8 +254,6 @@ fun NoPermissionContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
         ) {
-            /*
-            * TODO()*/
             Text(
                 textAlign = TextAlign.Center,
                 text = "Please grant the permission to use the camera to use the core functionality of this app."
@@ -131,6 +261,55 @@ fun NoPermissionContent(
             Button(onClick = onRequestPermission) {
                 Icon(imageVector = Icons.Default.Camera, contentDescription = "Camera")
                 Text(text = "Grant permission")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropdownMenuSample(modifier: Modifier = Modifier, onSelectedItem: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val items = listOf("3б", "3а", "2а", "3д")
+    var selectedItem by remember { mutableStateOf(items[0]) }
+
+    Column(
+        modifier = modifier
+    ) {
+        Text(
+            text = "Selected: $selectedItem",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                value = selectedItem,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Корпус") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier.menuAnchor()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                items.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(text = item) },
+                        onClick = {
+                            selectedItem = item
+                            expanded = false
+                            onSelectedItem(item)
+                        }
+                    )
+                }
             }
         }
     }
@@ -164,3 +343,4 @@ fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
         }
     }
 }
+

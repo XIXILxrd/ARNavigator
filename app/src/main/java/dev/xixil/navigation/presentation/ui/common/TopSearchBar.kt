@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.ar.sceneform.rendering.Vertex
 import dev.xixil.navigation.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +78,6 @@ fun TopSearchBar(
 fun AudienceItem(
     modifier: Modifier = Modifier,
     audienceNumberText: String,
-    subtitleText: String,
 ) {
     Column(
         modifier = modifier
@@ -93,19 +93,14 @@ fun AudienceItem(
             style = MaterialTheme.typography.titleMedium,
             color = Color.Black
         )
-        Text(
-            text = subtitleText,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFFA09CAB)
-        )
+
     }
 }
 
 @Composable
 fun AudienceHistoryItem(
     modifier: Modifier = Modifier,
-    audienceNumberText: String,
-    subtitleText: String,
+    audienceNumberText: String
 ) {
     Row(
         modifier = modifier
@@ -136,24 +131,6 @@ fun AudienceHistoryItem(
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.Black
             )
-            Text(
-                text = subtitleText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFFA09CAB) //TODO Implement in materialtheme color
-            )
-        }
-    }
-}
-
-@Composable
-fun AudienceList(
-    modifier: Modifier = Modifier,
-    list: List<String>,
-    content: @Composable () -> Unit,
-) {
-    LazyColumn {
-        items(list) {audience ->
-            content()
         }
     }
 }
@@ -162,13 +139,13 @@ fun AudienceList(
 @Preview
 @Composable
 private fun ItemHistoryPreview() {
-    AudienceHistoryItem(audienceNumberText = "First List Title", subtitleText = "1st subtitle")
+    AudienceHistoryItem(audienceNumberText = "First List Title")
 }
 
 @Preview
 @Composable
 private fun ItemPreview() {
-    AudienceItem(audienceNumberText = "First List Title", subtitleText = "1st subtitle")
+    AudienceItem(audienceNumberText = "First List Title")
 }
 
 @Preview(showSystemUi = true)

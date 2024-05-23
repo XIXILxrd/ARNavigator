@@ -26,7 +26,6 @@ import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingFailureReason
 import dev.xixil.navigation.R
-import dev.xixil.navigation.presentation.ui.annotations.DefaultPreview
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.common.TravelTimeBar
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
@@ -80,16 +79,12 @@ private fun RouteScreenContent(
             ) {
                 SmallTextField(
                     modifier = Modifier.weight(0.5f),
-                    placeholder = stringResource(id = R.string.to_text)
-                ) {
-                    source
-                }
+                    placeholder = source
+                )
                 SmallTextField(
                     modifier = Modifier.weight(0.5f),
-                    placeholder = stringResource(id = R.string.from_text)
-                ) {
-                    destination
-                }
+                    placeholder = destination
+                )
             }
 
             TravelTimeBar(hours = hours, minutes = minutes)
