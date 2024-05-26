@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Camera
@@ -25,15 +26,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +43,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
@@ -105,7 +101,7 @@ fun CameraContent(
             }
         )
 
-        AnalysisArea(text = detectedText)
+        AnalysisArea()
 
         Button(onClick = {
             dialogState = true
@@ -129,12 +125,6 @@ fun CameraContent(
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun asd() {
-    ConfirmDetectedText(detectedText = "123", onTextDetected = {}) {}
 }
 
 @Composable
@@ -225,6 +215,7 @@ private fun Menu(modifier: Modifier = Modifier, selectedItem: (String) -> Unit) 
             Icon(Icons.Default.MoreVert, contentDescription = "Localized description")
         }
         DropdownMenu(
+            scrollState = rememberScrollState(),
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
@@ -235,7 +226,6 @@ private fun Menu(modifier: Modifier = Modifier, selectedItem: (String) -> Unit) 
             }
         }
     }
-
 }
 
 @Composable
@@ -266,57 +256,8 @@ fun NoPermissionContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownMenuSample(modifier: Modifier = Modifier, onSelectedItem: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val items = listOf("3б", "3а", "2а", "3д")
-    var selectedItem by remember { mutableStateOf(items[0]) }
-
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = "Selected: $selectedItem",
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            TextField(
-                value = selectedItem,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Корпус") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier.menuAnchor()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                items.forEach { item ->
-                    DropdownMenuItem(
-                        text = { Text(text = item) },
-                        onClick = {
-                            selectedItem = item
-                            expanded = false
-                            onSelectedItem(item)
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
+fun AnalysisArea(modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -332,15 +273,7 @@ fun AnalysisArea(modifier: Modifier = Modifier, text: String) {
                 )
                 .background(color = Color.White.copy(alpha = 0.2f), RoundedCornerShape(25.dp))
                 .zIndex(1f)
-        ) {
-            Text(
-                text = text, modifier = Modifier.align(
-                    Alignment.BottomCenter
-                ),
-                color = Color.White,
-                maxLines = 3
-            )
-        }
+        )
     }
 }
 

@@ -13,7 +13,7 @@ import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun HomeScreen(
+fun ScannerScreen(
     modifier: Modifier = Modifier,
     detectedText: (String) -> Unit,
 ) {
@@ -21,7 +21,7 @@ fun HomeScreen(
         rememberPermissionState(permission = android.Manifest.permission.CAMERA)
 
     ARNavigationTheme {
-        HomeScreenContent(
+        ScannerScreenContent(
             modifier = modifier,
             hasPermission = cameraPermission.status.isGranted,
             onRequestPermission = { cameraPermission.launchPermissionRequest() },
@@ -31,7 +31,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeScreenContent(
+private fun ScannerScreenContent(
     modifier: Modifier = Modifier,
     hasPermission: Boolean,
     onRequestPermission: () -> Unit,

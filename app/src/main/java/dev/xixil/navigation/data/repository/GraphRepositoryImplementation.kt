@@ -48,9 +48,9 @@ class GraphRepositoryImplementation @Inject constructor(
         }
     }
 
-//    override suspend fun getVertex(vertexId: Long): Vertex {
-//        return graphFirebase.getVertex(vertexId)
-//    }
+    override suspend fun getVertex(name: String): RequestResult<Vertex> {
+        return graphFirebase.getVertex(name).toRequestResult().map { it.toVertex() }
+    }
 
     override fun getGraph(): Flow<RequestResult<Map<Vertex, List<Edge>>>> {
         //:)
@@ -89,16 +89,8 @@ class GraphRepositoryImplementation @Inject constructor(
     override fun getAllAudiences(): Flow<RequestResult<List<Vertex>>> {
         val start = flowOf<RequestResult<List<VertexDbo>>>(RequestResult.Loading())
 
-        val request = graphFirebase.getAllVertices().map { result ->
+        val request = graphFirebase.getAllAudience().map { result ->
             result.toRequestResult()
-        }.onEach { requestResult ->
-            if (requestResult is RequestResult.Success) {
-                requestResult.map { list ->
-                    list.filter {
-                        !it.data.isNullOrBlank()
-                    }
-                }
-            }
         }
 
         return merge(start, request).map { requestResult ->

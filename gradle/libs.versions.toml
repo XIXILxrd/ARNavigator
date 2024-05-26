@@ -26,7 +26,6 @@ firebase-bom = "33.0.0"
 firebaseFirestoreKtx = "25.0.0"
 kotlinSerialization = "1.6.3"
 hiltNavigationCompose = "1.2.0"
-composePreviewRenderer = "0.0.1-alpha01"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }

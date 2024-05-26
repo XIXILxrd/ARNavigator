@@ -21,12 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.xixil.navigation.R
 
-@Preview
-@Composable
-private fun SmallTextFieldPreview() {
-
-}
-
 @Composable
 fun LargeTextField(
     modifier: Modifier = Modifier,

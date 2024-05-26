@@ -2,17 +2,17 @@ package dev.xixil.navigation.presentation.ui.common
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.ar.sceneform.rendering.Vertex
 import dev.xixil.navigation.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,54 +77,19 @@ fun TopSearchBar(
 fun AudienceItem(
     modifier: Modifier = Modifier,
     audienceNumberText: String,
+    onItemClicked: (String) -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(MaterialTheme.colorScheme.onPrimary)
-            .padding(top = 16.dp, bottom = 16.dp, end = 12.dp, start = 52.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = audienceNumberText,
-            maxLines = 1,
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.Black
-        )
-
-    }
-}
-
-@Composable
-fun AudienceHistoryItem(
-    modifier: Modifier = Modifier,
-    audienceNumberText: String
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(MaterialTheme.colorScheme.onPrimary)
-            .padding(vertical = 16.dp, horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.History,
-            tint = Color(0xFFA09CAB),
-            contentDescription = null
-        )
-
+    Card(modifier.clickable { onItemClicked(audienceNumberText) }) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(MaterialTheme.colorScheme.onPrimary)
-                .padding(start = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+                .padding(top = 16.dp, bottom = 16.dp, end = 12.dp, start = 52.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
+                modifier = Modifier,
                 text = audienceNumberText,
                 maxLines = 1,
                 style = MaterialTheme.typography.titleMedium,
@@ -135,17 +99,53 @@ fun AudienceHistoryItem(
     }
 }
 
+@Composable
+fun AudienceHistoryItem(
+    modifier: Modifier = Modifier,
+    audienceNumberText: String,
+    onItemClicked: (String) -> Unit,
+) {
+    Card(modifier.clickable { onItemClicked(audienceNumberText) }) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(MaterialTheme.colorScheme.onPrimary)
+                .padding(vertical = 16.dp, horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.History,
+                tint = Color(0xFFA09CAB),
+                contentDescription = null
+            )
+            Text(
+                text = audienceNumberText,
+                maxLines = 1,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black
+            )
+        }
+
+    }
+}
+
 
 @Preview
 @Composable
 private fun ItemHistoryPreview() {
-    AudienceHistoryItem(audienceNumberText = "First List Title")
+    AudienceHistoryItem(audienceNumberText = "First List Title") {
+
+    }
 }
 
 @Preview
 @Composable
 private fun ItemPreview() {
-    AudienceItem(audienceNumberText = "First List Title")
+    AudienceItem(audienceNumberText = "First List Title") {
+
+    }
 }
 
 @Preview(showSystemUi = true)

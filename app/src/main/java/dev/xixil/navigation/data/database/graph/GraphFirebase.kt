@@ -8,6 +8,7 @@ import dev.xixil.navigation.data.database.graph.models.EdgeDbo
 import dev.xixil.navigation.data.database.graph.models.VertexDbo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -57,6 +58,27 @@ class GraphFirebase @Inject constructor() {
         }
     }
 
+    fun getAllAudience(): Flow<Result<List<VertexDbo>>> = flow {
+        val result = mutableListOf<VertexDbo>()
+
+        val querySnapshot = verticesCollectionRef.whereNotEqualTo("data", "").get().await()
+
+        if (querySnapshot.documents.isNotEmpty()) {
+            for (document in querySnapshot.documents) {
+                try {
+                    document.toObject<VertexDbo>()?.let {
+                        result.add(it)
+                    }
+                } catch (e: Exception){
+                    emit(Result.failure(e))
+                }
+            }
+            emit(Result.success(result.toList()))
+        } else {
+            emit(Result.failure(Throwable("Nothing found")))
+        }
+    }
+
     fun getAllEdges() = flow {
         val result = mutableListOf<EdgeDbo>()
 
@@ -74,18 +96,20 @@ class GraphFirebase @Inject constructor() {
         }
     }
 
-    fun getVertex(data: String) = flow {
+    suspend fun getVertex(data: String): Result<VertexDbo> {
         val querySnapshot = verticesCollectionRef.whereEqualTo("data", data).limit(1).get().await()
 
         if (querySnapshot.documents.isNotEmpty()) {
             try {
                 querySnapshot.documents.last().toObject<VertexDbo>()?.let {
-                    emit(Result.success(it))
+                    return Result.success(it)
                 }
             } catch (e: Exception) {
-                emit(Result.failure(e))
+                return Result.failure(Throwable("${e.message}"))
             }
         }
+
+        return Result.failure(Throwable("Vertex with $data not found"))
     }
 
     fun removeVertex(vertexDbo: VertexDbo) = CoroutineScope(Dispatchers.IO).launch {
@@ -180,7 +204,6 @@ class GraphFirebase @Inject constructor() {
     companion object {
         private const val EDGE_COLLECTION_PATH = "edges"
         private const val VERTEX_COLLECTION_PATH = "vertices"
-
         private const val TAG = "GraphFirebase"
     }
 }

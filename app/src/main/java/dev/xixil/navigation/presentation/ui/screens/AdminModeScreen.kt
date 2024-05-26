@@ -1,7 +1,6 @@
 package dev.xixil.navigation.presentation.ui.screens
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -51,8 +50,6 @@ import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 import dev.xixil.navigation.presentation.MainActivity
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
-import dev.xixil.navigation.presentation.ui.navigation.ApplicationArgument.AUDIENCE
-import dev.xixil.navigation.presentation.ui.navigation.ApplicationArgument.EMPTY_ARGUMENT
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
 import dev.xixil.navigation.presentation.utils.DisplayRotationHelper
 import dev.xixil.navigation.presentation.utils.DrawerHelper
@@ -231,14 +228,14 @@ private fun AdminModeContent(
                                     CloudAnchorNode(engine = engine, anchor = anchor).apply {
                                         host(
                                             session = currentSession,
-                                            ttlDays = 1
+                                            ttlDays = 365
                                         ) { cloudAnchorId, state ->
                                             if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
                                                 vertexNode.parent = this
 
                                                 childNodes[vertexNode] = Vertex(
                                                     id = Random.nextLong(),
-                                                    data = if (audienceNumber != EMPTY_ARGUMENT && audienceNumber.isNotBlank()) audience else "",
+                                                    data = if (audienceNumber.isNotBlank()) audience else "",
                                                     cloudAnchorId = cloudAnchorId,
                                                     coordinates = vertexNode.worldPosition
                                                 ).also(onCreateVertex)
@@ -323,7 +320,7 @@ private fun AdminModeContent(
                                         ).apply {
                                             host(
                                                 session = currentSession,
-                                                ttlDays = 1
+                                                ttlDays = 365
                                             ) { cloudAnchorId, state ->
                                                 if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
                                                     edgeNode.addChildNode(this)
@@ -394,7 +391,7 @@ private fun BottomSheetContent(
                     .clickable {
                         onAddAudience()
                     },
-                placeholder = if (audienceField == EMPTY_ARGUMENT) stringResource(id = R.string.click_to_add_an_audience_text_placeholder) else audienceField,
+                placeholder = audienceField.ifBlank { stringResource(id = R.string.click_to_add_an_audience_text_placeholder) },
                 textAlign = TextAlign.Center
             )
         }

@@ -1,5 +1,6 @@
 package dev.xixil.navigation.presentation.ui.common
 
+import android.util.Log
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -22,6 +24,7 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,56 +36,35 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import dev.xixil.navigation.R
-import dev.xixil.navigation.domain.models.Vertex
+import dev.xixil.navigation.presentation.ui.common.TabItem.Audiences.onItemClicked
+import dev.xixil.navigation.presentation.viewmodels.SearchViewModel
+import dev.xixil.navigation.presentation.viewmodels.ViewModelState
 
 sealed class TabItem(
-    open val titleResId: Int,
-    open val list: List<Any>,
-    open val screen: @Composable () -> Unit,
+    val titleResId: Int,
+    val screen: @Composable () -> Unit,
+    var onItemClicked: (String) -> Unit,
 ) {
-    class Audiences(
-        override val titleResId: Int = R.string.audiences_text,
-        override val list: List<Vertex>,
-        override val screen: @Composable () -> Unit,
-    ) : TabItem(titleResId, list, screen)
+    data object Audiences :
+        TabItem(R.string.audiences_text, { AudiencesList(onItemClicked = { onItemClicked(it) }) }, {})
 
-    class Recent(
-        override val titleResId: Int = R.string.recent_text,
-        override val list: List<dev.xixil.navigation.domain.models.Record>,
-        override val screen: @Composable () -> Unit,
-    ) : TabItem(titleResId, list, screen)
+    data object Recent :
+        TabItem(R.string.recent_text, { RecentAudiences(onItemClicked = { onItemClicked(it) }) }, {})
 }
+
 
 @Composable
 fun Tabs(
     modifier: Modifier = Modifier,
-    audiencesTabContent: List<Vertex>,
-    recentContent: List<dev.xixil.navigation.domain.models.Record>,
+    onItemClicked: (String) -> Unit,
 ) {
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     val tabs = listOf(
-        TabItem.Audiences(
-            list = audiencesTabContent,
-            screen = {
-                LazyColumn {
-                    items(audiencesTabContent) { vertex ->
-                        AudienceItem(audienceNumberText = "${vertex.data}")
-                    }
-                }
-            }
-        ),
-        TabItem.Recent(
-            list = recentContent,
-            screen = {
-                LazyColumn {
-                    items(recentContent) { record ->
-                        AudienceHistoryItem(audienceNumberText = record.end)
-                    }
-                }
-            }
-        )
+        TabItem.Audiences,
+        TabItem.Recent
     )
 
     Surface(
@@ -106,15 +88,17 @@ fun Tabs(
                         selected = tabIndex == index,
                         onClick = {
                             tabIndex = index
-                            tabItem.screen
                         },
                         text = stringResource(id = tabItem.titleResId)
                     )
+                    tabItem.onItemClicked = onItemClicked
                 }
             }
         )
+
     }
 
+    tabs[tabIndex].screen()
 }
 
 @Composable
@@ -159,8 +143,8 @@ private fun CustomIndicator(tabPositions: List<TabPosition>, tabIndex: Int) {
 private fun CustomTab(
     modifier: Modifier = Modifier,
     selected: Boolean,
-    onClick: () -> Unit,
     text: String,
+    onClick: () -> Unit,
 ) {
     Tab(
         modifier = modifier
@@ -177,6 +161,101 @@ private fun CustomTab(
             maxLines = 1,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun AudiencesList(modifier: Modifier = Modifier, onItemClicked: (String) -> Unit) {
+    val viewModel: SearchViewModel = hiltViewModel()
+
+    val audiences = viewModel.audiencesState.collectAsState()
+
+    when (val list = audiences.value) {
+        is ViewModelState.Error -> EmptyListScreen()
+        is ViewModelState.Loading -> LoadingListScreen()
+        is ViewModelState.None -> {}
+        is ViewModelState.Success -> {
+            SuccessAudiencesListScreen(
+                modifier = modifier,
+                list = list.data.map { "${it.data}" },
+            ) {
+                onItemClicked(it)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuccessAudiencesListScreen(
+    modifier: Modifier = Modifier,
+    list: List<String>,
+    onItemClicked: (String) -> Unit,
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        items(list) { audience ->
+            AudienceItem(
+                audienceNumberText = audience,
+                onItemClicked = {
+                    onItemClicked(it)
+                    Log.d("NavParamsCheck", "Item search: $it")
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SuccessRecordsListScreen(
+    modifier: Modifier = Modifier,
+    list: List<String>,
+    onItemClicked: (String) -> Unit,
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        items(list) { audience ->
+            AudienceHistoryItem(
+                audienceNumberText = audience,
+                onItemClicked = { onItemClicked(it)
+                    Log.d("NavParamsCheck", "ListScreen search: $it")
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentAudiences(modifier: Modifier = Modifier, onItemClicked: (String) -> Unit) {
+    val viewModel: SearchViewModel = hiltViewModel()
+
+    val records = viewModel.recordsState.collectAsState()
+
+    when (val list = records.value) {
+        is ViewModelState.Error -> EmptyListScreen()
+        is ViewModelState.Loading -> LoadingListScreen()
+        is ViewModelState.None -> {}
+        is ViewModelState.Success -> {
+            SuccessRecordsListScreen(modifier = modifier, list = list.data.map { it.end }) {
+                onItemClicked(it)
+            }
+        }
+    }
+}
+
+
+@Composable
+fun LoadingListScreen(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
+        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+private fun EmptyListScreen(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Text(
+            text = "Empty",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.displayLarge
         )
     }
 }

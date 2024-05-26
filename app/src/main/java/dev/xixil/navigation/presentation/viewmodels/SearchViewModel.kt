@@ -2,6 +2,7 @@ package dev.xixil.navigation.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.xixil.navigation.domain.models.Record
 import dev.xixil.navigation.domain.models.Vertex
 import dev.xixil.navigation.domain.usecases.graphUseCases.GetAllAudiencesUseCase
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Provider
 
+@HiltViewModel
 class SearchViewModel @Inject constructor(
     private val getAllAudiencesUseCase: Provider<GetAllAudiencesUseCase>,
     private val getRecordsUseCase: Provider<GetRecordsUseCase>,

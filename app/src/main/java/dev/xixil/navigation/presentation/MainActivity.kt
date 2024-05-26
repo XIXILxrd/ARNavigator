@@ -4,16 +4,18 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableException
 import dagger.hilt.android.AndroidEntryPoint
-import dev.xixil.navigation.presentation.ui.common.BottomNavigationBar
-import dev.xixil.navigation.presentation.ui.navigation.ApplicationNavigation
 import dev.xixil.navigation.presentation.ui.navigation.Screen
+import dev.xixil.navigation.presentation.ui.navigation.createExternalRouter
+import dev.xixil.navigation.presentation.ui.navigation.navigate
+import dev.xixil.navigation.presentation.ui.screens.MainScreen
 import dev.xixil.navigation.presentation.ui.theme.ARNavigationTheme
 
 @AndroidEntryPoint
@@ -23,17 +25,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ARNavigationTheme {
-                val navController = rememberNavController()
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    val navController = rememberNavController()
 
-                Scaffold(
-                    bottomBar = { BottomNavigationBar(navController = navController) }
-                ) {
                     if (isARCoreSupportedAndUpToDate()) {
-                        ApplicationNavigation(
-                            modifier = Modifier.padding(it),
-                            navController = navController,
-                            startDestination = Screen.Home.route
-                        )
+
+                        NavHost(navController = navController, startDestination = Screen.Main.route) {
+                            composable(Screen.Main.route) {
+                                MainScreen(router = createExternalRouter { screen, params ->
+                                    navController.navigate(screen, params)
+                                })
+                            }
+                        }
+
                     } else {
                         Toast.makeText(this, "AR not installed", Toast.LENGTH_SHORT).show()
                     }
