@@ -28,6 +28,7 @@ import dev.xixil.navigation.R
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     @StringRes text: Int,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     onClick: () -> Unit,
@@ -38,7 +39,8 @@ fun PrimaryButton(
             .wrapContentHeight(),
         colors = colors,
         shape = RoundedCornerShape(12.dp),
-        onClick = onClick
+        onClick = onClick,
+        enabled = enabled,
     ) {
         Text(text = stringResource(id = text), color = colors.contentColor)
     }
@@ -92,7 +94,7 @@ private fun ButtonPreview() {
 
         }
 
-        PrimaryButton(text = R.string.profile_content_description_text) {
+        PrimaryButton(text = R.string.profile_content_description_text, enabled = true) {
 
         }
 

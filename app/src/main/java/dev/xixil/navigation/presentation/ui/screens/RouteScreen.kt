@@ -1,6 +1,5 @@
 package dev.xixil.navigation.presentation.ui.screens
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -35,6 +32,7 @@ import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
 import dev.xixil.navigation.R
 import dev.xixil.navigation.domain.models.Vertex
+import dev.xixil.navigation.presentation.ui.common.PrimaryButton
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.common.TravelTimeBar
 import dev.xixil.navigation.presentation.ui.navigation.Screen
@@ -53,11 +51,10 @@ import io.github.sceneview.rememberView
 
 @Composable
 fun RouteScreen(
-    source: String = "5",
-    destination: String = "2",
+    source: String,
+    destination: String,
     navController: NavController,
 ) {
-    Log.d("RouteScreenParams", "$source $destination")
     val viewModel: RouteViewModel = hiltViewModel()
 
     ARNavigationTheme {
@@ -141,7 +138,8 @@ private fun RouteScreenContent(
                 minutes
             )
 
-            Button(
+            PrimaryButton(
+                text = R.string.go_text_button,
                 enabled = sourceTextField.isNotBlank() && destinationTextField.isNotBlank(),
                 onClick = {
                     if (childNodes.isEmpty() && cameraNode.trackingState == TrackingState.TRACKING) {
@@ -195,9 +193,7 @@ private fun RouteScreenContent(
                         }
                     }
                 }
-            ) {
-                Text("Go!")
-            }
+            )
         }) { innerPadding ->
         ARScene(
             modifier = Modifier

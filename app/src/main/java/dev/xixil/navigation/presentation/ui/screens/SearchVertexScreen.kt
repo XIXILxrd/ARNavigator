@@ -1,6 +1,5 @@
 package dev.xixil.navigation.presentation.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,7 +17,6 @@ fun SearchVertexScreen(
     ARNavigationTheme {
         SearchVertexContent(onSelectedAudience = {
             onSelectedAudience(it)
-            Log.d("NavParamsCheck", "SearchVertexScreen: $it")
         })
     }
 }
@@ -29,7 +27,6 @@ private fun SearchVertexContent(onSelectedAudience: (String) -> Unit) {
         TopSearchBar(query = "")
         Tabs(modifier = Modifier.padding(horizontal = 16.dp)) {
             onSelectedAudience(it)
-            Log.d("NavParamsCheck", "SearchContent search: $it")
         }
     }
 }

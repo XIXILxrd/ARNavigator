@@ -14,31 +14,20 @@ fun RouteContainer(
         startDestination = Screen.Route.route,
         router = externalRouter,
         screens = listOf(
-            Pair("${Screen.Route.route}?$SOURCE_PARAM_KEY={$SOURCE_PARAM_KEY}") { nav, _, params ->
-                val source = params?.getString(SOURCE_PARAM_KEY)
-                Log.d("RouteScreenParams", "1 param: source $source")
-                RouteScreen(
-                    source = source ?: DEFAULT_VALUE,
-                    destination = DEFAULT_VALUE,
-                    navController = nav
-                )
-            },
-
             Pair("${Screen.Route.route}?$SOURCE_PARAM_KEY={$SOURCE_PARAM_KEY}&$DESTINATION_PARAM_KEY={$DESTINATION_PARAM_KEY}") { nav, _, params ->
-                val source = params?.getString(SOURCE_PARAM_KEY)
-                val destination = params?.getString(DESTINATION_PARAM_KEY)
+                val source = params?.getString(SOURCE_PARAM_KEY) ?: DEFAULT_VALUE
+                val destination = params?.getString(DESTINATION_PARAM_KEY)  ?: DEFAULT_VALUE
                 Log.d("RouteScreenParams", "2 param: source $source, destination $destination")
 
                 RouteScreen(
-                    source = source ?: DEFAULT_VALUE,
-                    destination = destination ?: DEFAULT_VALUE,
+                    source = source,
+                    destination = destination,
                     navController = nav
                 )
             },
 
             Pair(Screen.Scanner.route) { nav, _, _ ->
                 ScannerScreen {
-                    Log.d("RouteScreenParams", "scanner: source $it")
                     nav.navigate("${Screen.Route.route}?$SOURCE_PARAM_KEY=$it")
                 }
             },
@@ -46,8 +35,6 @@ fun RouteContainer(
             Pair("${Screen.Search.route}?$SOURCE_PARAM_KEY={$SOURCE_PARAM_KEY}") { nav, _, params ->
                 val source = params?.getString(SOURCE_PARAM_KEY) ?: DEFAULT_VALUE
                 SearchVertexScreen { destination ->
-                    Log.d("RouteScreenParams", "search 1 param: source $source, destination $destination")
-
                     nav.navigate("${Screen.Route.route}?$SOURCE_PARAM_KEY=$source&$DESTINATION_PARAM_KEY=$destination")
                 }
             }

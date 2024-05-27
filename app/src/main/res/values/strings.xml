@@ -32,5 +32,6 @@
     <string name="correct_text_button">Correct</string>
     <string name="dismiss_text_button">Dismiss</string>
     <string name="click_to_add_an_audience_text_placeholder">Click to add an audience</string>
+    <string name="go_text_button">Go!</string>
 
 </resources>

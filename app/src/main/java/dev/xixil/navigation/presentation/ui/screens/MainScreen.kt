@@ -23,7 +23,6 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     val screens = listOf(
-        Screen.Scanner,
         Screen.Route,
         Screen.AdminScreen,
         Screen.Profile
@@ -57,11 +56,6 @@ fun MainScreen(
             navController = navController,
             startDestination = Screen.Scanner.route,
         ) {
-            composable(Screen.Scanner.route) {
-                ScannerScreen(detectedText = { text ->
-                    navController.navigate("${Screen.Route.route}?$SOURCE_PARAM_KEY=$text")
-                })
-            }
             composable(Screen.Route.route) { RouteContainer(externalRouter = router) }
             composable(Screen.AdminScreen.route) { AdminModeContainer(externalRouter = router) }
             composable(Screen.Profile.route) { UserProfileScreen() }
