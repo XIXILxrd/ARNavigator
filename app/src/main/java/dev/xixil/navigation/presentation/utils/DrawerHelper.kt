@@ -55,7 +55,7 @@ class DrawerHelper {
         return edgeNode
     }
 
-    fun createAndResolveNode(
+    private fun createAndResolveNode(
         modelInstances: MutableList<ModelInstance>,
         modelLoader: ModelLoader,
         cloudAnchorId: String,
@@ -124,6 +124,61 @@ class DrawerHelper {
         }
     }
 
+    fun drawPath(
+        path: List<Edge>,
+        context: Context,
+        engine: Engine,
+        session: Session,
+        modelInstances: MutableList<ModelInstance>,
+        modelLoader: ModelLoader,
+        childNodes: SnapshotStateMap<Node, Any>,
+    ) {
+        path.forEach { edge ->
+            createAndResolveNode(
+                modelInstances = modelInstances,
+                modelLoader = modelLoader,
+                cloudAnchorId = edge.source.cloudAnchorId,
+                engine = engine,
+                session = session,
+                onSuccess = { sourceNode ->
+                    createAndResolveNode(
+                        modelInstances = modelInstances,
+                        modelLoader = modelLoader,
+                        cloudAnchorId = edge.destination.cloudAnchorId,
+                        engine = engine,
+                        session = session,
+                        onSuccess = { destinationNode ->
+                            createAndResolveEdge(
+                                edge = edge,
+                                engine = engine,
+                                session = session,
+                                sourceNode = sourceNode,
+                                destinationNode = destinationNode,
+                                childNodes = childNodes,
+                                context = context
+                            )
+                        },
+                        onError = {
+                            Toast.makeText(
+                                context,
+                                "Can't resolve destination vertex",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                },
+                onError = {
+                    Toast.makeText(
+                        context,
+                        "Can't resolve source vertex",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }
+    }
+
+
     fun loadGraph(
         graph: Map<Vertex, List<Edge>>,
         context: Context,
@@ -183,13 +238,3 @@ class DrawerHelper {
         }
     }
 }
-
-
-//private fun <K, V> Map<K, V>.getKeyByValue(value: V): K? {
-//    for ((key, entryValue) in this) {
-//        if (entryValue == value) {
-//            return key
-//        }
-//    }
-//    return null
-//}

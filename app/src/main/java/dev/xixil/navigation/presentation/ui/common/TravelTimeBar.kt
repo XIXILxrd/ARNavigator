@@ -21,13 +21,12 @@ import dev.xixil.navigation.R
 @Preview
 @Composable
 private fun TravelTimeBarPreview() {
-    TravelTimeBar(hours = 1, minutes = 13)
+    TravelTimeBar(minutes = 13)
 }
 
 @Composable
 fun TravelTimeBar(
     modifier: Modifier = Modifier,
-    hours: Int,
     minutes: Int,
 ) {
     Surface(modifier = modifier.fillMaxWidth()) {
@@ -44,12 +43,7 @@ fun TravelTimeBar(
                 contentDescription = null
             )
             Text(
-                text = if (hours <= 0) {
-                    "$minutes " + stringResource(id = R.string.minutes_text)
-                } else {
-                    "$hours " + stringResource(id = R.string.hours_text) +
-                            " $minutes " + stringResource(id = R.string.minutes_text)
-                },
+                text = "$minutes",
                 color = Color(0xFFA09CAB)
             )
         }

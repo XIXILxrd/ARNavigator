@@ -54,7 +54,7 @@ fun MainScreen(
         NavHost(
             modifier = Modifier.padding(it),
             navController = navController,
-            startDestination = Screen.Scanner.route,
+            startDestination = Screen.Route.route,
         ) {
             composable(Screen.Route.route) { RouteContainer(externalRouter = router) }
             composable(Screen.AdminScreen.route) { AdminModeContainer(externalRouter = router) }

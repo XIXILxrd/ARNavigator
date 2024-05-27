@@ -164,7 +164,7 @@ private fun AdminModeContent(
             modelLoader = modelLoader,
             collisionSystem = collisionSystem,
             sessionConfiguration = { session, config ->
-                config.focusMode = Config.FocusMode.AUTO
+                config.focusMode = Config.FocusMode.FIXED
                 config.depthMode = when (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
                     true -> Config.DepthMode.AUTOMATIC
                     else -> Config.DepthMode.DISABLED
@@ -228,7 +228,7 @@ private fun AdminModeContent(
                                     CloudAnchorNode(engine = engine, anchor = anchor).apply {
                                         host(
                                             session = currentSession,
-                                            ttlDays = 365
+                                            ttlDays = 1
                                         ) { cloudAnchorId, state ->
                                             if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
                                                 vertexNode.parent = this
@@ -320,7 +320,7 @@ private fun AdminModeContent(
                                         ).apply {
                                             host(
                                                 session = currentSession,
-                                                ttlDays = 365
+                                                ttlDays = 1
                                             ) { cloudAnchorId, state ->
                                                 if (state == Anchor.CloudAnchorState.SUCCESS && cloudAnchorId != null) {
                                                     edgeNode.addChildNode(this)

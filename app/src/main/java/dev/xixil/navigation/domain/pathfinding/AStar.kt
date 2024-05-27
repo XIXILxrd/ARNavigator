@@ -11,19 +11,17 @@ class AStar @Inject constructor() : Pathfinding {
         start: Vertex,
         finish: Vertex,
         graph: Map<Vertex, List<Edge>>,
-    ): List<Vertex> {
+    ): List<Edge> {
         val fScore = mutableMapOf<Vertex, Long>().withDefault { Long.MAX_VALUE }
         val gScore = mutableMapOf<Vertex, Long>().withDefault { Long.MAX_VALUE }
 
         val openSet = PriorityQueue<Vertex>(compareBy { fScore[it] ?: Long.MAX_VALUE }).apply {
             add(start)
         }
-        val cameFrom = mutableMapOf<Vertex, Vertex>()
-
+        val cameFrom = mutableMapOf<Vertex, Edge>()
 
         gScore[start] = 0
         fScore[start] = heuristicCostEstimate(start, finish)
-
 
         while (openSet.isNotEmpty()) {
             val current = openSet.poll() ?: break
@@ -38,7 +36,7 @@ class AStar @Inject constructor() : Pathfinding {
                 val tentativeGScore = (gScore[current] ?: Long.MAX_VALUE) + edge.weight
 
                 if (tentativeGScore < (gScore[neighbor] ?: Long.MAX_VALUE)) {
-                    cameFrom[neighbor] = current
+                    cameFrom[neighbor] = edge
                     gScore[neighbor] = tentativeGScore
                     fScore[neighbor] = tentativeGScore + heuristicCostEstimate(neighbor, finish)
 
@@ -52,18 +50,18 @@ class AStar @Inject constructor() : Pathfinding {
         return listOf()
     }
 
-    private fun reconstructPath(cameFrom: Map<Vertex, Vertex>, current: Vertex): List<Vertex> {
-        val path = mutableListOf<Vertex>()
+    private fun reconstructPath(cameFrom: Map<Vertex, Edge>, current: Vertex): List<Edge> {
+        val path = mutableListOf<Edge>()
         var currentVertex: Vertex? = current
 
-        while (currentVertex != null) {
-            path.add(currentVertex)
-            currentVertex = cameFrom[currentVertex]
+        while (currentVertex != null && cameFrom.containsKey(currentVertex)) {
+            val edge = cameFrom[currentVertex] ?: break
+            path.add(edge)
+            currentVertex = edge.source
         }
 
         return path.reversed()
     }
-
 
     private fun heuristicCostEstimate(start: Vertex, finish: Vertex): Long {
         return abs(start.coordinates.x - finish.coordinates.x).toLong() +

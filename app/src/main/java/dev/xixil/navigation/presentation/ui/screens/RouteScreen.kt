@@ -107,15 +107,14 @@ private fun RouteScreenContent(
     val cameraNode = rememberCameraNode2(engine)
     val childNodes = rememberNodesMap()
     val view = rememberView(engine)
+    val modelInstances = remember { mutableListOf<ModelInstance>() }
     val collisionSystem = rememberCollisionSystem(view)
     var frame by remember { mutableStateOf<Frame?>(null) }
-    val modelInstances = remember { mutableListOf<ModelInstance>() }
     var trackingFailureReason by remember {
         mutableStateOf<TrackingFailureReason?>(null)
     }
 
     val scaffoldState = rememberBottomSheetScaffoldState()
-    val hours by remember { mutableIntStateOf(0) }
     val minutes by remember { mutableIntStateOf(0) }
 
     val graphState = viewModel.graph.collectAsState().value
@@ -134,7 +133,6 @@ private fun RouteScreenContent(
                 sourceTextField,
                 onChooseDestination,
                 destinationTextField,
-                hours,
                 minutes
             )
 
@@ -165,27 +163,19 @@ private fun RouteScreenContent(
                                         graph = graphState.data
                                     )
 
-                                    path.forEach { vertex ->
-                                        if (childNodes.isEmpty() && cameraNode.trackingState == TrackingState.TRACKING) {
-                                            cameraNode.session?.let { currentSession ->
-                                                drawerHelper.createAndResolveNode(
-                                                    modelInstances = modelInstances,
-                                                    modelLoader = modelLoader,
-                                                    cloudAnchorId = vertex.cloudAnchorId,
-                                                    engine = engine,
-                                                    session = currentSession,
-                                                    onSuccess = { node ->
-                                                        childNodes[node] = vertex
-                                                    },
-                                                    onError = {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Can`t resolve node",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                )
-                                            }
+                                    if (cameraNode.trackingState == TrackingState.TRACKING) {
+                                        childNodes.clear()
+
+                                        cameraNode.session?.let { currentSession ->
+                                            drawerHelper.drawPath(
+                                                path = path,
+                                                context = context,
+                                                engine = engine,
+                                                session = currentSession,
+                                                modelInstances = modelInstances,
+                                                modelLoader = modelLoader,
+                                                childNodes = childNodes
+                                            )
                                         }
                                     }
                                 }
@@ -213,9 +203,10 @@ private fun RouteScreenContent(
                     }
                 config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
+                config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
             },
             cameraNode = cameraNode,
-            planeRenderer = false,
+            planeRenderer = true,
             onTrackingFailureChanged = {
                 trackingFailureReason = it
             },
@@ -241,7 +232,6 @@ private fun BottomSheetTextFields(
     sourceTextField: String,
     onChooseDestination: () -> Unit,
     destinationTextField: String,
-    hours: Int,
     minutes: Int,
 ) {
     Row(
@@ -276,6 +266,6 @@ private fun BottomSheetTextFields(
         )
     }
     if (sourceTextField.isNotBlank() && destinationTextField.isNotBlank()) {
-        TravelTimeBar(hours = hours, minutes = minutes)
+        TravelTimeBar(minutes = minutes)
     }
 }

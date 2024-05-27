@@ -33,7 +33,7 @@ class RouteViewModel @Inject constructor(
     }
 
 
-    fun findPath(start: Vertex, destination: Vertex, graph: Map<Vertex, List<Edge>>): List<Vertex> {
+    fun findPath(start: Vertex, destination: Vertex, graph: Map<Vertex, List<Edge>>): List<Edge> {
         return pathfinding.get().findPath(start = start, finish = destination, graph)
     }
 }
