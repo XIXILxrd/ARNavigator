@@ -8,7 +8,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.os.bundleOf
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -17,7 +16,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.xixil.navigation.presentation.ui.navigation.Router
 import dev.xixil.navigation.presentation.ui.navigation.Screen
-import dev.xixil.navigation.presentation.ui.navigation.navigate
 
 @Composable
 fun MainScreen(
@@ -61,7 +59,7 @@ fun MainScreen(
         ) {
             composable(Screen.Scanner.route) {
                 ScannerScreen(detectedText = { text ->
-                    navController.navigate(Screen.Route.route, bundleOf("source" to text))
+                    navController.navigate("${Screen.Route.route}?$SOURCE_PARAM_KEY=$text")
                 })
             }
             composable(Screen.Route.route) { RouteContainer(externalRouter = router) }

@@ -1,11 +1,9 @@
 package dev.xixil.navigation.presentation.ui.screens
 
 import androidx.compose.runtime.Composable
-import androidx.core.os.bundleOf
 import dev.xixil.navigation.presentation.ui.navigation.NavigationController
 import dev.xixil.navigation.presentation.ui.navigation.Router
 import dev.xixil.navigation.presentation.ui.navigation.Screen
-import dev.xixil.navigation.presentation.ui.navigation.navigate
 
 @Composable
 fun AdminModeContainer(externalRouter: Router) {
@@ -13,11 +11,11 @@ fun AdminModeContainer(externalRouter: Router) {
         startDestination = Screen.AdminScreen.route,
         router = externalRouter,
         screens = listOf(
-            Pair(Screen.AdminScreen.route) { navController, _, params ->
+            Pair("${Screen.AdminScreen.route}?$ADMIN_SCREEN_PARAM_KEY={$ADMIN_SCREEN_PARAM_KEY}") { navController, _, params ->
+                val audience  = params?.getString(ADMIN_SCREEN_PARAM_KEY) ?: DEFAULT_VALUE
+
                 AdminModeScreen(
-                    audience = params?.getBundle(ADMIN_SCREEN_PARAM_KEY)
-                        ?.getString(ADMIN_SCREEN_PARAM_KEY, DEFAULT_VALUE)
-                        ?: DEFAULT_VALUE,
+                    audience = audience,
                     onAddAudience = {
                         navController.navigate(
                             Screen.Scanner.route
@@ -27,12 +25,12 @@ fun AdminModeContainer(externalRouter: Router) {
 
             Pair(Screen.Scanner.route) { nav, _, _ ->
                 ScannerScreen {
-                    nav.navigate(Screen.AdminScreen.route, bundleOf(ADMIN_SCREEN_PARAM_KEY to it))
+                    nav.navigate("${Screen.AdminScreen.route}?$ADMIN_SCREEN_PARAM_KEY=$it")
                 }
             }
         )
     )
 }
 
-private const val ADMIN_SCREEN_PARAM_KEY = "audience_admin"
+const val ADMIN_SCREEN_PARAM_KEY = "audience_admin"
 private const val DEFAULT_VALUE = ""

@@ -21,7 +21,7 @@ fun NavigationController(
                 screen.second.invoke(
                     navigation,
                     router,
-                    navigation.previousBackStackEntry?.arguments
+                    it.arguments
                 )
             }
         }
