@@ -24,7 +24,7 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("Boolean", "IS_ADMIN_MODE", "true")
+        buildConfigField("String", "WEB_CLIENT_ID", "\"600239879419-uc8r3uecmois76np0e79ulbqgfdb9akk.apps.googleusercontent.com\"")
     }
 
     buildTypes {
@@ -58,6 +58,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.coil.compose)
+
     implementation(libs.kotlinx.serialization)
 
     implementation(libs.firebase.database)
@@ -88,6 +90,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.auth)
+    implementation(libs.firebase.auth.ktx)
     kapt(libs.dagger.hilt.compiler)
 
     implementation(libs.room)

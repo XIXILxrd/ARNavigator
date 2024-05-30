@@ -4,5 +4,5 @@ import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Vertex
 
 interface Pathfinding {
-    fun findPath(start: Vertex, finish: Vertex, graph: Map<Vertex, List<Edge>>): List<Edge>
+        fun findPath(start: Vertex, finish: Vertex, graph: Map<Vertex, List<Edge>>): List<Edge>
 }

@@ -15,6 +15,7 @@ sealed class Screen(val route: String, val icon: ImageVector) {
     object Route : Screen("route", Icons.Outlined.Route)
     object Search : Screen("search", Icons.Outlined.Search)
     object Profile : Screen("profile", Icons.Outlined.Person)
+    object SignIn: Screen("signIn",Icons.Outlined.Person)
 }
 
 

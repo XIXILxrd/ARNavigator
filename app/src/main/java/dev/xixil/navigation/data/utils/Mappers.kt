@@ -6,6 +6,8 @@ import dev.xixil.navigation.data.database.graph.models.VertexDbo
 import dev.xixil.navigation.data.database.record.models.RecordDbo
 import dev.xixil.navigation.domain.models.Edge
 import dev.xixil.navigation.domain.models.Record
+import dev.xixil.navigation.domain.models.User
+import dev.xixil.navigation.domain.models.UserDbo
 import dev.xixil.navigation.domain.models.Vertex
 
 fun RecordDbo.toRecord() = Record(
@@ -52,4 +54,16 @@ fun VertexDbo.toVertex() = Vertex(
     data = data,
     cloudAnchorId = cloudAnchorId,
     coordinates = Float3(x, y, z)
+)
+
+fun User.toUserDbo() = UserDbo(
+    id = this.id,
+    name = this.name,
+    profilePictureUrl = this.photoUrl
+)
+
+fun UserDbo.toUser() = User(
+    id = this.id,
+    name = this.name ?: "",
+    photoUrl = this.profilePictureUrl ?: ""
 )

@@ -7,7 +7,7 @@
     <string name="search_placeholder_text">Search</string>
     <string name="find_location_content_description_text">Find Location</string>
     <string name="back_button_text">Back button</string>
-    <string name="admin_mode_text">Admin mode</string>
+    <string name="admin_mode_text">Administrator</string>
     <string name="from_text">from</string>
     <string name="to_text">to</string>
     <string name="audiences_text">Audiences</string>
@@ -33,5 +33,9 @@
     <string name="dismiss_text_button">Dismiss</string>
     <string name="click_to_add_an_audience_text_placeholder">Click to add an audience</string>
     <string name="go_text_button">Go!</string>
+    <string name="email_address_textfield">Email Address</string>
+    <string name="password_textfield">Password</string>
+    <string name="register_text_button">Register</string>
+    <string name="sing_in_text_button">Sing in</string>
 
 </resources>

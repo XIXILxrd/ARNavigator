@@ -74,7 +74,6 @@ fun SmallPrimitiveButton(
     onClick: () -> Unit,
 ) {
     Button(
-
         modifier = modifier
             .width(110.dp)
             .wrapContentHeight(),

@@ -1,5 +1,7 @@
 package dev.xixil.navigation.presentation.ui.screens
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -55,10 +57,12 @@ fun MainScreen(
             modifier = Modifier.padding(it),
             navController = navController,
             startDestination = Screen.Route.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None }
         ) {
             composable(Screen.Route.route) { RouteContainer(externalRouter = router) }
             composable(Screen.AdminScreen.route) { AdminModeContainer(externalRouter = router) }
-            composable(Screen.Profile.route) { UserProfileScreen() }
+            composable(Screen.Profile.route) { UserProfileContainer(externalRouter = router) }
         }
     }
 }

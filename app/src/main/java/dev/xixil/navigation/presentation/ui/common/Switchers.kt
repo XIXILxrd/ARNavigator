@@ -1,6 +1,5 @@
 package dev.xixil.navigation.presentation.ui.common
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,17 +15,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import dev.xixil.navigation.R
 
 @Composable
 fun SwitcherWithText(
     modifier: Modifier = Modifier,
+    onChecked: (Boolean) -> Unit,
     text: String,
 ) {
     var isChecked by rememberSaveable { mutableStateOf(false) }
+    onChecked(isChecked)
 
     Row(
         modifier = modifier
@@ -44,10 +42,4 @@ fun SwitcherWithText(
             checked = isChecked,
             onCheckedChange = { isChecked = !isChecked })
     }
-}
-
-@Preview
-@Composable
-private fun Switcher() {
-    SwitcherWithText(text = stringResource(R.string.admin_mode_text))
 }

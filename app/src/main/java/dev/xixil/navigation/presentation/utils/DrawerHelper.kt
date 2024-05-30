@@ -190,50 +190,52 @@ class DrawerHelper {
     ) {
         graph.values.forEach { listOfEdges ->
             listOfEdges.forEach { edge ->
-                createAndResolveNode(
-                    modelInstances = modelInstances,
-                    modelLoader = modelLoader,
-                    cloudAnchorId = edge.source.cloudAnchorId,
-                    engine = engine,
-                    session = session,
-                    onSuccess = { sourceNode ->
-                        childNodes[sourceNode] = edge.source
+                if (!(childNodes.containsValue(edge.source) && childNodes.containsValue(edge.destination))) {
+                    createAndResolveNode(
+                        modelInstances = modelInstances,
+                        modelLoader = modelLoader,
+                        cloudAnchorId = edge.source.cloudAnchorId,
+                        engine = engine,
+                        session = session,
+                        onSuccess = { sourceNode ->
+                            childNodes[sourceNode] = edge.source
 
-                        createAndResolveNode(
-                            modelInstances = modelInstances,
-                            modelLoader = modelLoader,
-                            cloudAnchorId = edge.destination.cloudAnchorId,
-                            engine = engine,
-                            session = session,
-                            onSuccess = { destinationNode ->
-                                childNodes[destinationNode] = edge.destination
-                                createAndResolveEdge(
-                                    edge = edge,
-                                    engine = engine,
-                                    session = session,
-                                    sourceNode = sourceNode,
-                                    destinationNode = destinationNode,
-                                    childNodes = childNodes,
-                                    context = context
-                                )
-                            },
-                            onError = {
-                                Toast.makeText(
-                                    context,
-                                    "Can't resolve destination vertex",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        )
-                    },
-                    onError = {
-                        Toast.makeText(
-                            context,
-                            "Can't resolve source vertex",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                )
+                            createAndResolveNode(
+                                modelInstances = modelInstances,
+                                modelLoader = modelLoader,
+                                cloudAnchorId = edge.destination.cloudAnchorId,
+                                engine = engine,
+                                session = session,
+                                onSuccess = { destinationNode ->
+                                    childNodes[destinationNode] = edge.destination
+                                    createAndResolveEdge(
+                                        edge = edge,
+                                        engine = engine,
+                                        session = session,
+                                        sourceNode = sourceNode,
+                                        destinationNode = destinationNode,
+                                        childNodes = childNodes,
+                                        context = context
+                                    )
+                                },
+                                onError = {
+                                    Toast.makeText(
+                                        context,
+                                        "Can't resolve destination vertex",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        },
+                        onError = {
+                            Toast.makeText(
+                                context,
+                                "Can't resolve source vertex",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                }
             }
         }
     }

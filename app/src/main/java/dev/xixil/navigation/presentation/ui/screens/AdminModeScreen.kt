@@ -98,7 +98,8 @@ fun AdminModeScreen(
 @Composable
 private fun AdminModeContent(
     audience: String,
-    modifier: Modifier = Modifier, drawerHelper: DrawerHelper = DrawerHelper(),
+    modifier: Modifier = Modifier,
+    drawerHelper: DrawerHelper = DrawerHelper(),
     onObserveGraph: StateFlow<ViewModelState<Map<Vertex, List<Edge>>>>,
     onAddAudience: () -> Unit,
     onCreateVertex: (Vertex) -> Unit,

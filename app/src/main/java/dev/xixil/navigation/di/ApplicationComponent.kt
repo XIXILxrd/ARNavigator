@@ -4,7 +4,6 @@ import dagger.Component
 
 
 @Component(
-    modules = [DataModule::class]
+    modules = [DataModule::class, AuthModule::class]
 )
-interface ApplicationComponent {
-}
+interface ApplicationComponent

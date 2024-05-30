@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,7 +35,6 @@ import com.google.ar.core.TrackingFailureReason
 import com.google.ar.core.TrackingState
 import dev.xixil.navigation.R
 import dev.xixil.navigation.domain.models.Vertex
-import dev.xixil.navigation.presentation.ui.common.PrimaryButton
 import dev.xixil.navigation.presentation.ui.common.SmallTextField
 import dev.xixil.navigation.presentation.ui.common.TravelTimeBar
 import dev.xixil.navigation.presentation.ui.navigation.Screen
@@ -136,8 +138,12 @@ private fun RouteScreenContent(
                 minutes
             )
 
-            PrimaryButton(
-                text = R.string.go_text_button,
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                shape = RoundedCornerShape(12.dp),
                 enabled = sourceTextField.isNotBlank() && destinationTextField.isNotBlank(),
                 onClick = {
                     if (childNodes.isEmpty() && cameraNode.trackingState == TrackingState.TRACKING) {
@@ -183,7 +189,9 @@ private fun RouteScreenContent(
                         }
                     }
                 }
-            )
+            ) {
+                Text(text = stringResource(id = R.string.go_text_button))
+            }
         }) { innerPadding ->
         ARScene(
             modifier = Modifier

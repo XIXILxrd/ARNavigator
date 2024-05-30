@@ -26,6 +26,9 @@ firebase-bom = "33.0.0"
 firebaseFirestoreKtx = "25.0.0"
 kotlinSerialization = "1.6.3"
 hiltNavigationCompose = "1.2.0"
+playServicesAuth = "21.2.0"
+firebaseAuthKtx = "20.4.1"
+coil = "2.2.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -81,7 +84,11 @@ firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-fires
 
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 
-androidx-hilt-navigation-compose = { group ="androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose"}
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 
 [plugins]
