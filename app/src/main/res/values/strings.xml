@@ -1,3 +1,41 @@
 <resources>
-    <string name="app_name">ARNavigation</string>
+    <string name="app_name">Интерактивная карта ЮУрГУ</string>
+    <string name="home_content_description_text">Home</string>
+    <string name="search_content_description_text">Search</string>
+    <string name="route_content_description_text">Route</string>
+    <string name="profile_content_description_text">Profile</string>
+    <string name="search_placeholder_text">Search</string>
+    <string name="find_location_content_description_text">Find Location</string>
+    <string name="back_button_text">Back button</string>
+    <string name="admin_mode_text">Administrator</string>
+    <string name="from_text">from</string>
+    <string name="to_text">to</string>
+    <string name="audiences_text">Audiences</string>
+    <string name="recent_text">Recent</string>
+    <string name="hours_text">hr</string>
+    <string name="minutes_text">min</string>
+    <string name="profile_text">Profile</string>
+    <string name="remove_button_text">Remove</string>
+    <string name="link_button_text">Link</string>
+    <string name="add_button_text">Add</string>
+    <string name="directions_text">Directions</string>
+    <string name="from_here_placeholder_text">From here</string>
+    <string name="to_placeholder_text">To</string>
+    <string name="history_title_text">History</string>
+    <string name="admin_mode_screen_title">Admin mode</string>
+    <string name="directions_screen_title">Directions</string>
+    <string name="home_screen_title">Home</string>
+    <string name="route_screen_title">Route</string>
+    <string name="search_screen_title">Search</string>
+    <string name="user_profile_screen_title">Profile</string>
+    <string name="next_text_button">Next</string>
+    <string name="correct_text_button">Correct</string>
+    <string name="dismiss_text_button">Dismiss</string>
+    <string name="click_to_add_an_audience_text_placeholder">Click to add an audience</string>
+    <string name="go_text_button">Go!</string>
+    <string name="email_address_textfield">Email Address</string>
+    <string name="password_textfield">Password</string>
+    <string name="register_text_button">Register</string>
+    <string name="sing_in_text_button">Sing in</string>
+
 </resources>

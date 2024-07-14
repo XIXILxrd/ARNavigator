@@ -1,9 +1,11 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kapt)
-    alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -21,6 +23,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "WEB_CLIENT_ID", "\"600239879419-uc8r3uecmois76np0e79ulbqgfdb9akk.apps.googleusercontent.com\"")
     }
 
     buildTypes {
@@ -33,17 +37,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -53,9 +58,40 @@ android {
 }
 
 dependencies {
+    implementation(libs.coil.compose)
+
+    implementation(libs.kotlinx.serialization)
+
+    implementation(libs.firebase.database)
+    implementation(platform(libs.firebase.bom))
+
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.ar.sceneview)
+
+    implementation(libs.compose.viewmodel)
+
+    implementation(libs.kotlin.math)
+
+    implementation(libs.androidx.navigation.compose)
+
+    implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.accompanist.permissions)
+
+    implementation(libs.camera.core)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.camera.extensions)
+
+    implementation(libs.mlkit.text.recognition.latin)
+
     implementation(libs.arcore)
 
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.auth)
+    implementation(libs.firebase.auth.ktx)
     kapt(libs.dagger.hilt.compiler)
 
     implementation(libs.room)
